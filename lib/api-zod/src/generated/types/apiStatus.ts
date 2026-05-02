@@ -6,6 +6,10 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface HealthStatus {
+export interface ApiStatus {
   status: string;
+  platform: string;
+  totalEndpoints: number;
+  uptime: number;
+  version: string;
 }

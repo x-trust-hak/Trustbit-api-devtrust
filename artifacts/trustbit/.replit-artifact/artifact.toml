@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Trustbit API"
+version = "1.0.0"
+id = "artifacts/trustbit"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22877
+
+[services.development]
+run = "pnpm --filter @workspace/trustbit run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/trustbit", "run", "build" ]
+publicDir = "artifacts/trustbit/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22877"
+BASE_PATH = "/"

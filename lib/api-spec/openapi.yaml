@@ -2,14 +2,16 @@ openapi: 3.1.0
 info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
-  version: 0.1.0
-  description: API specification
+  version: 1.0.0
+  description: Trustbit API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: endpoints
+    description: API endpoint discovery
 paths:
   /healthz:
     get:
@@ -24,6 +26,49 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /endpoints:
+    get:
+      operationId: listEndpoints
+      tags: [endpoints]
+      summary: List all endpoints
+      description: Returns all available API endpoints grouped by category
+      responses:
+        "200":
+          description: Full endpoint list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EndpointsResponse"
+
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [endpoints]
+      summary: List all categories
+      description: Returns a summary list of all API categories with endpoint counts
+      responses:
+        "200":
+          description: Category list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoriesResponse"
+
+  /status:
+    get:
+      operationId: getApiStatus
+      tags: [health]
+      summary: API platform status
+      description: Returns Trustbit API platform status including total endpoints and uptime
+      responses:
+        "200":
+          description: Platform status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiStatus"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +79,104 @@ components:
       required:
         - status
 
+    EndpointItem:
+      type: object
+      properties:
+        name:
+          type: string
+        desc:
+          type: string
+        path:
+          type: string
+      required:
+        - name
+        - desc
+        - path
+
+    CategoryGroup:
+      type: object
+      properties:
+        name:
+          type: string
+        count:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/EndpointItem"
+      required:
+        - name
+        - count
+        - items
+
+    EndpointsResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+        creator:
+          type: string
+        totalEndpoints:
+          type: integer
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoryGroup"
+      required:
+        - status
+        - creator
+        - totalEndpoints
+        - categories
+
+    CategorySummary:
+      type: object
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        count:
+          type: integer
+        description:
+          type: string
+      required:
+        - name
+        - slug
+        - count
+        - description
+
+    CategoriesResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategorySummary"
+        total:
+          type: integer
+      required:
+        - status
+        - categories
+        - total
+
+    ApiStatus:
+      type: object
+      properties:
+        status:
+          type: string
+        platform:
+          type: string
+        totalEndpoints:
+          type: integer
+        uptime:
+          type: number
+        version:
+          type: string
+      required:
+        - status
+        - platform
+        - totalEndpoints
+        - uptime
+        - version
