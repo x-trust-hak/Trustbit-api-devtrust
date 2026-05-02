@@ -10,6 +10,7 @@ const Home = lazy(() => import("@/pages/home"));
 const Docs = lazy(() => import("@/pages/docs"));
 const Status = lazy(() => import("@/pages/status"));
 const Admin = lazy(() => import("@/pages/admin"));
+const Portfolio = lazy(() => import("@/pages/portfolio"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,6 +46,7 @@ function Router() {
                 <Route path="/" component={Home} />
                 <Route path="/docs" component={Docs} />
                 <Route path="/status" component={Status} />
+                <Route path="/portfolio" component={Portfolio} />
                 <Route component={NotFound} />
               </Switch>
             </Suspense>

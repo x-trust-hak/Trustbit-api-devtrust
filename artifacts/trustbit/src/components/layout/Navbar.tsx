@@ -1,5 +1,5 @@
 import { Link, useLocation, useLocation as useNav } from "wouter";
-import { Terminal, Activity, BookOpen, Layers, Menu, X } from "lucide-react";
+import { Terminal, Activity, BookOpen, Layers, Menu, X, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRef, useState } from "react";
 
@@ -38,6 +38,7 @@ export function Navbar() {
     { href: "/", label: "Overview", icon: Layers },
     { href: "/docs", label: "Documentation", icon: BookOpen },
     { href: "/status", label: "Status", icon: Activity },
+    { href: "/portfolio", label: "Portfolio", icon: User },
   ];
 
   return (
