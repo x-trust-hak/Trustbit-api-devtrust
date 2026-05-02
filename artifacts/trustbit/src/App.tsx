@@ -1,35 +1,63 @@
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useEffect } from "react";
-import NotFound from "@/pages/not-found";
-import Home from "@/pages/home";
-import Docs from "@/pages/docs";
-import Status from "@/pages/status";
 import { Navbar } from "@/components/layout/Navbar";
+import NotFound from "@/pages/not-found";
 
-const queryClient = new QueryClient();
+const Home = lazy(() => import("@/pages/home"));
+const Docs = lazy(() => import("@/pages/docs"));
+const Status = lazy(() => import("@/pages/status"));
+const Admin = lazy(() => import("@/pages/admin"));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+function PageLoader() {
+  return (
+    <div className="flex-1 flex items-center justify-center min-h-[40vh]">
+      <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+    </div>
+  );
+}
 
 function Router() {
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground dark selection:bg-primary/30 selection:text-primary">
-      <Navbar />
-      <main className="flex-1 flex flex-col">
-        <Switch>
-          <Route path="/" component={Home} />
-          <Route path="/docs" component={Docs} />
-          <Route path="/status" component={Status} />
-          <Route component={NotFound} />
-        </Switch>
-      </main>
-    </div>
+    <Switch>
+      <Route path="/admin">
+        <Suspense fallback={<PageLoader />}>
+          <Admin />
+        </Suspense>
+      </Route>
+      <Route>
+        <div className="min-h-screen flex flex-col bg-background text-foreground dark selection:bg-primary/30 selection:text-primary">
+          <Navbar />
+          <main className="flex-1 flex flex-col">
+            <Suspense fallback={<PageLoader />}>
+              <Switch>
+                <Route path="/" component={Home} />
+                <Route path="/docs" component={Docs} />
+                <Route path="/status" component={Status} />
+                <Route component={NotFound} />
+              </Switch>
+            </Suspense>
+          </main>
+        </div>
+      </Route>
+    </Switch>
   );
 }
 
 function App() {
   useEffect(() => {
-    document.documentElement.classList.add('dark');
+    document.documentElement.classList.add("dark");
   }, []);
 
   return (
