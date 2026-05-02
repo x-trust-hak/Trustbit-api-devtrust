@@ -5,7 +5,7 @@ import {
 } from "recharts";
 import {
   Activity, Server, Clock, TrendingUp, AlertTriangle, CheckCircle2,
-  RefreshCw, Lock, Shield, Zap, Database, Eye, Radio,
+  RefreshCw, Lock, Shield, Zap, Database, Eye, Radio, Users,
 } from "lucide-react";
 
 const ADMIN_KEY = "trustbit-admin-2026";
@@ -33,6 +33,14 @@ function statusBg(s: number): string {
   return "bg-green-500/10 text-green-400";
 }
 
+interface VisitorStats {
+  todayCount: number;
+  weekCount: number;
+  monthCount: number;
+  totalCount: number;
+  dailyChart: { date: string; visitors: number }[];
+}
+
 interface Stats {
   startedAt: number;
   uptime: number;
@@ -44,6 +52,7 @@ interface Stats {
   hourBuckets: { label: string; requests: number; errors: number; bytes: number }[];
   topEndpoints: { path: string; count: number; errors: number; avgMs: number }[];
   recentRequests: { id: number; method: string; path: string; status: number; ms: number; bytes: number; ts: number }[];
+  visitors: VisitorStats;
 }
 
 function StatCard({ icon: Icon, label, value, sub, color }: {
@@ -155,6 +164,8 @@ export default function Admin() {
   const hasHourData = stats?.hourBuckets.some((b) => b.requests > 0) ?? false;
   const hasEndpoints = (stats?.topEndpoints.length ?? 0) > 0;
   const hasBytes = (stats?.totalBytes ?? 0) > 0;
+  const hasVisitors = (stats?.visitors?.totalCount ?? 0) > 0;
+  const hasVisitorChart = stats?.visitors?.dailyChart.some((d) => d.visitors > 0) ?? false;
 
   const pieData = hasRequests && stats
     ? [
@@ -211,7 +222,45 @@ export default function Admin() {
           </div>
         ) : (
           <>
-            {/* Stat Cards */}
+            {/* Visitor Stat Cards */}
+            <div className="rounded-xl border border-border/40 bg-card/30 p-4 space-y-4">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-primary" />
+                <h2 className="font-semibold text-sm">Website Visitors</h2>
+                <span className="text-xs text-muted-foreground">(unique per day)</span>
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <StatCard icon={Users} label="Today" value={formatNum(stats.visitors?.todayCount ?? 0)}
+                  sub="unique visitors" color="bg-primary/10 text-primary" />
+                <StatCard icon={TrendingUp} label="This Week" value={formatNum(stats.visitors?.weekCount ?? 0)}
+                  sub="last 7 days" color="bg-blue-500/10 text-blue-400" />
+                <StatCard icon={Activity} label="This Month" value={formatNum(stats.visitors?.monthCount ?? 0)}
+                  sub="last 30 days" color="bg-purple-500/10 text-purple-400" />
+                <StatCard icon={Eye} label="All Time" value={formatNum(stats.visitors?.totalCount ?? 0)}
+                  sub="since launch" color="bg-green-500/10 text-green-500" />
+              </div>
+              {hasVisitorChart ? (
+                <ResponsiveContainer width="100%" height={160}>
+                  <BarChart data={stats.visitors.dailyChart} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
+                    <XAxis dataKey="date" tick={{ fontSize: 9, fill: "#555" }} tickLine={false} axisLine={false} interval={4} />
+                    <YAxis tick={{ fontSize: 9, fill: "#555" }} tickLine={false} axisLine={false} width={24} allowDecimals={false} />
+                    <Tooltip contentStyle={{ background: "#0a0a0a", border: "1px solid #333", borderRadius: 8, fontSize: 12 }}
+                      labelStyle={{ color: "#aaa" }} />
+                    <Bar dataKey="visitors" fill="#00ffcc" opacity={0.8} radius={[3, 3, 0, 0]} name="Visitors" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                !hasVisitors && (
+                  <div className="flex items-center justify-center h-20 text-muted-foreground gap-2">
+                    <Users className="h-4 w-4 opacity-30" />
+                    <p className="text-sm">Visitors will appear here as people browse the site</p>
+                  </div>
+                )
+              )}
+            </div>
+
+            {/* API Stat Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <StatCard icon={TrendingUp} label="Total Requests" value={formatNum(stats.totalRequests)}
                 sub={"since " + new Date(stats.startedAt).toLocaleDateString()} color="bg-primary/10 text-primary" />

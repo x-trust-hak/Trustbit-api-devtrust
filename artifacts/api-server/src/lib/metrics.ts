@@ -112,3 +112,57 @@ class MetricsStore {
 }
 
 export const metrics = new MetricsStore();
+
+// ── Visitor tracking ──────────────────────────────────────────────────────────
+
+function dayKey(ts = Date.now()): number {
+  return Math.floor(ts / 86_400_000);
+}
+
+function dayLabel(key: number): string {
+  const d = new Date(key * 86_400_000);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+class VisitorStore {
+  private days = new Map<number, Set<string>>();
+
+  private getDay(key: number): Set<string> {
+    if (!this.days.has(key)) this.days.set(key, new Set());
+    return this.days.get(key)!;
+  }
+
+  private prune(): void {
+    const cutoff = dayKey() - 31;
+    for (const k of this.days.keys()) {
+      if (k < cutoff) this.days.delete(k);
+    }
+  }
+
+  record(ip: string): void {
+    this.getDay(dayKey()).add(ip);
+    this.prune();
+  }
+
+  getStats() {
+    const today = dayKey();
+    const todayCount = this.getDay(today).size;
+
+    let weekCount = 0;
+    let monthCount = 0;
+    let totalCount = 0;
+
+    for (let i = 0; i < 7; i++) weekCount += (this.days.get(today - i)?.size ?? 0);
+    for (let i = 0; i < 30; i++) monthCount += (this.days.get(today - i)?.size ?? 0);
+    for (const s of this.days.values()) totalCount += s.size;
+
+    const dailyChart = Array.from({ length: 30 }, (_, i) => {
+      const k = today - (29 - i);
+      return { date: dayLabel(k), visitors: this.days.get(k)?.size ?? 0 };
+    });
+
+    return { todayCount, weekCount, monthCount, totalCount, dailyChart };
+  }
+}
+
+export const visitors = new VisitorStore();

@@ -58,6 +58,7 @@ function Router() {
 function App() {
   useEffect(() => {
     document.documentElement.classList.add("dark");
+    fetch("/api/visitors/ping", { method: "POST" }).catch(() => null);
   }, []);
 
   return (

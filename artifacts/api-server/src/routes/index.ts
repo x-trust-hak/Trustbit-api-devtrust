@@ -3,6 +3,8 @@ import healthRouter from "./health";
 import endpointsRouter from "./endpoints";
 import proxyRouter from "./proxy";
 import adminRouter from "./admin";
+import visitorsRouter from "./visitors";
+import telegramRouter from "./telegram";
 import { metrics } from "../lib/metrics";
 
 const router: IRouter = Router();
@@ -21,6 +23,8 @@ router.use((req: Request, res: Response, next: NextFunction): void => {
 router.use(adminRouter);
 router.use(healthRouter);
 router.use(endpointsRouter);
+router.use(visitorsRouter);
+router.use(telegramRouter);
 router.use(proxyRouter);
 
 export default router;

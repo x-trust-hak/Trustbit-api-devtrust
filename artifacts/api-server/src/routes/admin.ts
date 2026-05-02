@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { metrics } from "../lib/metrics";
+import { metrics, visitors } from "../lib/metrics";
 
 const router: IRouter = Router();
 
@@ -10,7 +10,10 @@ router.get("/admin/stats", (req, res): void => {
     res.status(403).json({ error: "Forbidden" });
     return;
   }
-  res.json(metrics.getStats());
+  res.json({
+    ...metrics.getStats(),
+    visitors: visitors.getStats(),
+  });
 });
 
 export default router;
