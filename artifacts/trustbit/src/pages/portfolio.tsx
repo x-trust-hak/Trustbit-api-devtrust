@@ -206,19 +206,6 @@ export default function Portfolio() {
         </div>
       </section>
 
-      {/* Footer */}
-      <div className="border-t border-border/20 py-6 text-center px-4">
-        <p className="text-xs text-muted-foreground">
-          Built with ❤️ by{" "}
-          <a href="https://t.me/KallmeTrust" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-            KallmeTrust
-          </a>
-          {" · "}
-          <a href="https://t.me/TrustBitOfficial" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-            @TrustBitOfficial
-          </a>
-        </p>
-      </div>
     </div>
   );
 }

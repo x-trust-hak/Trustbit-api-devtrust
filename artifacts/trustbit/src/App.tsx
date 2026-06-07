@@ -4,6 +4,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import NotFound from "@/pages/not-found";
 
 const Home = lazy(() => import("@/pages/home"));
@@ -51,6 +52,7 @@ function Router() {
               </Switch>
             </Suspense>
           </main>
+          <Footer />
         </div>
       </Route>
     </Switch>
