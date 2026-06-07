@@ -86,10 +86,10 @@ export default function Portfolio() {
             </span>
           </h1>
           <p className="text-lg text-muted-foreground font-medium mb-4">
-            API Developer & Bot Builder
+            API Developer · Bot Builder · Website & App Developer
           </p>
           <p className="text-muted-foreground max-w-xl mx-auto leading-relaxed text-sm md:text-base">
-            I build powerful APIs and automation tools that make developers' lives easier.
+            I build powerful APIs, bots, websites, and apps that make developers' lives easier.
             Creator of <span className="text-primary font-semibold">TrustbitAPI</span> — a unified platform
             with 545+ endpoints for AI, media, downloaders, and more.
           </p>

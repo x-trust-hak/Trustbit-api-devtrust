@@ -177,7 +177,7 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Top bar */}
-      <div className="sticky top-0 z-30 border-b border-border/40 bg-background/95 backdrop-blur px-4 md:px-6 py-3 flex items-center justify-between gap-3">
+      <div className="sticky top-0 z-30 border-b border-border/40 bg-background px-4 md:px-6 py-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
             <Shield className="h-4 w-4 text-primary" />
