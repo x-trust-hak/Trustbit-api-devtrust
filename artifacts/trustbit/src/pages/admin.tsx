@@ -59,7 +59,7 @@ function StatCard({ icon: Icon, label, value, sub, color }: {
   icon: React.ElementType; label: string; value: string; sub?: string; color?: string;
 }) {
   return (
-    <div className="rounded-xl border border-border/40 bg-card/60 p-4 flex items-start gap-3">
+    <div className="rounded-xl border border-border/40 bg-zinc-900 p-4 flex items-start gap-3">
       <div className={"flex h-9 w-9 items-center justify-center rounded-lg shrink-0 " + (color ?? "bg-primary/10 text-primary")}>
         <Icon className="h-4 w-4" />
       </div>
@@ -98,7 +98,7 @@ function LockScreen({ onUnlock }: { onUnlock: () => void }) {
           <h1 className="text-2xl font-bold">Admin Access</h1>
           <p className="text-muted-foreground text-sm mt-1">Trustbit API Control Panel</p>
         </div>
-        <div className="rounded-xl border border-border/40 bg-card/60 p-6 space-y-4">
+        <div className="rounded-xl border border-border/40 bg-zinc-900 p-6 space-y-4">
           <div>
             <label className="text-sm font-medium mb-2 block">Admin Key</label>
             <input
@@ -187,7 +187,7 @@ export default function Admin() {
             <p className="text-xs text-muted-foreground hidden sm:block">Control Panel</p>
           </div>
           <div className="ml-1 flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/20 shrink-0">
-            <Radio className="h-2 w-2 text-green-500 animate-pulse" />
+            <span className="h-2 w-2 rounded-full bg-green-500 inline-block" />
             <span className="text-xs text-green-500 font-medium">Live</span>
           </div>
         </div>
@@ -218,12 +218,12 @@ export default function Admin() {
       <div className="p-4 md:p-6 space-y-5 max-w-7xl mx-auto">
         {!stats ? (
           <div className="flex items-center justify-center h-64 text-muted-foreground">
-            <Activity className="h-6 w-6 animate-pulse mr-2" /> Loading metrics...
+            <Activity className="h-6 w-6 mr-2" /> Loading metrics...
           </div>
         ) : (
           <>
             {/* Visitor Stat Cards */}
-            <div className="rounded-xl border border-border/40 bg-card/30 p-4 space-y-4">
+            <div className="rounded-xl border border-border/40 bg-zinc-900 p-4 space-y-4">
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-primary" />
                 <h2 className="font-semibold text-sm">Website Visitors</h2>
@@ -275,7 +275,7 @@ export default function Admin() {
 
             {/* Charts row — only shown when there's real traffic */}
             <div className="grid lg:grid-cols-3 gap-4">
-              <div className="lg:col-span-2 rounded-xl border border-border/40 bg-card/40 p-5">
+              <div className="lg:col-span-2 rounded-xl border border-border/40 bg-zinc-900 p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <Eye className="h-4 w-4 text-primary" />
                   <h2 className="font-semibold text-sm">Requests — Last 24 Hours</h2>
@@ -306,7 +306,7 @@ export default function Admin() {
                 )}
               </div>
 
-              <div className="rounded-xl border border-border/40 bg-card/40 p-5">
+              <div className="rounded-xl border border-border/40 bg-zinc-900 p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <Activity className="h-4 w-4 text-primary" />
                   <h2 className="font-semibold text-sm">Success vs Errors</h2>
@@ -329,7 +329,7 @@ export default function Admin() {
             </div>
 
             {/* Top Endpoints */}
-            <div className="rounded-xl border border-border/40 bg-card/40 p-5">
+            <div className="rounded-xl border border-border/40 bg-zinc-900 p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Zap className="h-4 w-4 text-primary" />
                 <h2 className="font-semibold text-sm">Top Endpoints by Requests</h2>
@@ -353,7 +353,7 @@ export default function Admin() {
 
             {/* Bytes over time — only when there's data */}
             {hasBytes && (
-              <div className="rounded-xl border border-border/40 bg-card/40 p-5">
+              <div className="rounded-xl border border-border/40 bg-zinc-900 p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <Server className="h-4 w-4 text-primary" />
                   <h2 className="font-semibold text-sm">Data Served — Last 24 Hours</h2>
@@ -378,7 +378,7 @@ export default function Admin() {
             )}
 
             {/* Live Request Log */}
-            <div className="rounded-xl border border-border/40 bg-card/40 overflow-hidden">
+            <div className="rounded-xl border border-border/40 bg-zinc-900 overflow-hidden">
               <div className="px-4 md:px-5 py-4 border-b border-border/30 flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-primary" />
                 <h2 className="font-semibold text-sm">Live Request Log</h2>
@@ -432,7 +432,7 @@ export default function Admin() {
 
             {/* Response time leaderboard — only when there's data */}
             {hasEndpoints && (
-              <div className="rounded-xl border border-border/40 bg-card/40 p-5">
+              <div className="rounded-xl border border-border/40 bg-zinc-900 p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <Clock className="h-4 w-4 text-primary" />
                   <h2 className="font-semibold text-sm">Avg Response Time by Endpoint</h2>
