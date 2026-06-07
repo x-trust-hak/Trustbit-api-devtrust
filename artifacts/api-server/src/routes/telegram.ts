@@ -66,7 +66,8 @@ async function handleMessage(chatId: number, text: string): Promise<void> {
         `/cat — Random cat image\n` +
         `/dog — Random dog image\n` +
         `/fact — AI-generated fact\n` +
-        `/joke — AI-generated joke\n\n` +
+        `/joke — AI-generated joke\n` +
+        `/stats — Live platform stats\n\n` +
         `Powered by *TrustbitAPI* 🚀\n` +
         `Channel: @TrustBitOfficial`
       );
@@ -269,6 +270,43 @@ async function handleMessage(chatId: number, text: string): Promise<void> {
         const joke = extractField(data, "response", "result", "text", "answer") ?? "Could not get a joke.";
         await sendText(chatId, `😄 *Random Joke*\n\n${joke}`);
       } catch { await sendText(chatId, "❌ Could not get a joke."); }
+      break;
+    }
+
+    case "/stats": {
+      try {
+        const res = await fetch(`${SELF}/admin/stats?key=trustbit-admin-2026`, { signal: AbortSignal.timeout(8000) });
+        if (!res.ok) { await sendText(chatId, "❌ Could not fetch stats."); return; }
+        const s = await res.json() as {
+          uptime: number; totalRequests: number; totalErrors: number;
+          successRate: number; avgResponseMs: number; totalBytes: number;
+          visitors?: { todayCount: number; weekCount: number; totalCount: number };
+        };
+        const uptime = (() => {
+          const sec = s.uptime ?? 0;
+          const d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600), m = Math.floor((sec % 3600) / 60);
+          if (d > 0) return `${d}d ${h}h`;
+          if (h > 0) return `${h}h ${m}m`;
+          return `${m}m`;
+        })();
+        const bytes = (() => {
+          const b = s.totalBytes ?? 0;
+          if (b >= 1_048_576) return (b / 1_048_576).toFixed(1) + " MB";
+          if (b >= 1024) return (b / 1024).toFixed(1) + " KB";
+          return b + " B";
+        })();
+        const v = s.visitors;
+        await sendText(chatId,
+          `📊 *TrustbitAPI Live Stats*\n\n` +
+          `⏱ *Uptime:* ${uptime}\n` +
+          `📡 *Total Requests:* ${(s.totalRequests ?? 0).toLocaleString()}\n` +
+          `✅ *Success Rate:* ${(s.successRate ?? 0).toFixed(1)}%\n` +
+          `⚡ *Avg Response:* ${s.avgResponseMs ?? 0}ms\n` +
+          `💾 *Data Served:* ${bytes}\n` +
+          (v ? `\n👥 *Visitors Today:* ${v.todayCount}\n👥 *This Week:* ${v.weekCount}\n👥 *All Time:* ${v.totalCount}\n` : "") +
+          `\n_Powered by TrustbitAPI_ 🚀`
+        );
+      } catch { await sendText(chatId, "❌ Stats request failed. Server may be restarting."); }
       break;
     }
 
