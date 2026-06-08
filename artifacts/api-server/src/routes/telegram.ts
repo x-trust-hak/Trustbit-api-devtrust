@@ -1,10 +1,39 @@
 import { Router, type IRouter, type Request, type Response } from "express";
+import { readFileSync, writeFileSync, existsSync } from "fs";
+import { join } from "path";
 
 const router: IRouter = Router();
 
 const TOKEN = process.env["TELEGRAM_BOT_TOKEN"] ?? "";
 const TG = `https://api.telegram.org/bot${TOKEN}`;
 const SELF = `http://localhost:${process.env["PORT"] ?? 8080}/api`;
+const ADMIN_KEY = process.env["ADMIN_KEY"] ?? "trustbit-admin-2026";
+
+/* ── Persistent user store ── */
+const STORE_PATH = join(process.cwd(), "tg-users.json");
+
+function loadUsers(): Set<number> {
+  try {
+    if (existsSync(STORE_PATH)) {
+      const ids = JSON.parse(readFileSync(STORE_PATH, "utf8")) as number[];
+      return new Set(ids);
+    }
+  } catch { /* ignore */ }
+  return new Set();
+}
+
+function saveUsers(users: Set<number>): void {
+  try { writeFileSync(STORE_PATH, JSON.stringify([...users])); } catch { /* ignore */ }
+}
+
+const registeredUsers = loadUsers();
+
+function registerUser(chatId: number): void {
+  if (!registeredUsers.has(chatId)) {
+    registeredUsers.add(chatId);
+    saveUsers(registeredUsers);
+  }
+}
 
 async function tgPost(method: string, body: Record<string, unknown>): Promise<void> {
   if (!TOKEN) return;
@@ -44,6 +73,8 @@ function extractField(data: Record<string, unknown>, ...keys: string[]): string 
 }
 
 async function handleMessage(chatId: number, text: string): Promise<void> {
+  registerUser(chatId);
+
   const parts = text.trim().split(/\s+/);
   const cmd = (parts[0] ?? "").toLowerCase().split("@")[0] ?? "";
   const arg = parts.slice(1).join(" ").trim();
@@ -68,6 +99,9 @@ async function handleMessage(chatId: number, text: string): Promise<void> {
         `/fact — AI-generated fact\n` +
         `/joke — AI-generated joke\n` +
         `/stats — Live platform stats\n\n` +
+        `*Admin Only:*\n` +
+        `/broadcast <key> <msg> — Send to all users\n` +
+        `/users <key> — Total registered users\n\n` +
         `Powered by *TrustbitAPI* 🚀\n` +
         `Channel: @TrustBitOfficial`
       );
@@ -270,6 +304,54 @@ async function handleMessage(chatId: number, text: string): Promise<void> {
         const joke = extractField(data, "response", "result", "text", "answer") ?? "Could not get a joke.";
         await sendText(chatId, `😄 *Random Joke*\n\n${joke}`);
       } catch { await sendText(chatId, "❌ Could not get a joke."); }
+      break;
+    }
+
+    case "/broadcast": {
+      const spaceIdx = arg.indexOf(" ");
+      if (spaceIdx === -1) {
+        await sendText(chatId, "Usage: `/broadcast <adminkey> <your message>`\n\nExample:\n`/broadcast trustbit-admin-2026 Hello everyone!`");
+        return;
+      }
+      const givenKey = arg.slice(0, spaceIdx).trim();
+      const message = arg.slice(spaceIdx + 1).trim();
+
+      if (givenKey !== ADMIN_KEY) {
+        await sendText(chatId, "❌ Invalid admin key.");
+        return;
+      }
+      if (!message) {
+        await sendText(chatId, "❌ Message cannot be empty.");
+        return;
+      }
+
+      const total = registeredUsers.size;
+      await sendText(chatId, `📢 Broadcasting to *${total}* user${total !== 1 ? "s" : ""}...\n\nMessage:\n_${message.slice(0, 200)}_`);
+
+      let sent = 0, failed = 0;
+      for (const uid of registeredUsers) {
+        try {
+          await tgPost("sendMessage", {
+            chat_id: uid,
+            text: `📢 *Announcement from TrustbitAPI*\n\n${message}\n\n— @TrustBitOfficial`,
+            parse_mode: "Markdown",
+          });
+          sent++;
+        } catch { failed++; }
+        await new Promise((r) => setTimeout(r, 50));
+      }
+
+      await sendText(chatId, `✅ Broadcast complete!\n\n📤 Sent: *${sent}*\n❌ Failed: *${failed}*`);
+      break;
+    }
+
+    case "/users": {
+      const givenKey = arg.trim();
+      if (givenKey !== ADMIN_KEY) {
+        await sendText(chatId, "❌ Usage: `/users <adminkey>`");
+        return;
+      }
+      await sendText(chatId, `👥 *Registered Bot Users*\n\n*Total:* ${registeredUsers.size} user${registeredUsers.size !== 1 ? "s" : ""}\n\n_These are users who have interacted with the bot._`);
       break;
     }
 
