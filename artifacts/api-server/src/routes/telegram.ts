@@ -4,7 +4,7 @@ import { join } from "path";
 
 const router: IRouter = Router();
 
-const TOKEN = process.env["TELEGRAM_BOT_TOKEN"] ?? "";
+const TOKEN = process.env["TELEGRAM_BOT_TOKEN"] ?? "8668026671:AAFHASz22T95kcIuVtzSawwkTerJxxwAzuY";
 const TG = `https://api.telegram.org/bot${TOKEN}`;
 const SELF = `http://localhost:${process.env["PORT"] ?? 8080}/api`;
 const ADMIN_KEY = process.env["ADMIN_KEY"] ?? "trustbit-admin-2026";
