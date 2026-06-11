@@ -1,17 +1,13 @@
 #!/usr/bin/env bash
 set -e
 
-echo ">>> Enabling pnpm via corepack..."
-corepack enable
-corepack prepare pnpm@latest --activate
-
 echo ">>> Installing dependencies..."
-pnpm install --frozen-lockfile
+npx --yes pnpm@9 install --frozen-lockfile
 
 echo ">>> Building frontend..."
-PORT=3000 BASE_PATH=/ pnpm --filter @workspace/trustbit run build
+PORT=3000 BASE_PATH=/ npx pnpm@9 --filter @workspace/trustbit run build
 
 echo ">>> Building backend..."
-pnpm --filter @workspace/api-server run build
+npx pnpm@9 --filter @workspace/api-server run build
 
 echo ">>> Done!"
