@@ -100,6 +100,7 @@ async function handleMessage(chatId: number, text: string): Promise<void> {
         `/joke — AI-generated joke\n` +
         `/stats — Live platform stats\n\n` +
         `*Admin Only:*\n` +
+        `/admin <key> — Full dashboard stats\n` +
         `/broadcast <key> <msg> — Send to all users\n` +
         `/users <key> — Total registered users\n\n` +
         `Powered by *TrustbitAPI* 🚀\n` +
@@ -352,6 +353,59 @@ async function handleMessage(chatId: number, text: string): Promise<void> {
         return;
       }
       await sendText(chatId, `👥 *Registered Bot Users*\n\n*Total:* ${registeredUsers.size} user${registeredUsers.size !== 1 ? "s" : ""}\n\n_These are users who have interacted with the bot._`);
+      break;
+    }
+
+    case "/admin": {
+      const givenKey = arg.trim();
+      if (givenKey !== ADMIN_KEY) {
+        await sendText(chatId, "❌ Usage: `/admin <adminkey>`\n\nExample:\n`/admin trustbit-admin-2026`");
+        return;
+      }
+      try {
+        const res = await fetch(`${SELF}/admin/stats?key=${ADMIN_KEY}`, { signal: AbortSignal.timeout(8000) });
+        if (!res.ok) { await sendText(chatId, "❌ Could not fetch admin stats."); return; }
+        const s = await res.json() as {
+          uptime: number; totalRequests: number; totalErrors: number;
+          successRate: number; avgResponseMs: number; totalBytes: number;
+          startedAt: number;
+          visitors?: { todayCount: number; weekCount: number; monthCount: number; totalCount: number };
+          topEndpoints?: { path: string; count: number; avgMs: number }[];
+        };
+        const uptime = (() => {
+          const sec = s.uptime ?? 0;
+          const d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600), m = Math.floor((sec % 3600) / 60);
+          if (d > 0) return `${d}d ${h}h`;
+          if (h > 0) return `${h}h ${m}m`;
+          return `${m}m`;
+        })();
+        const bytes = (() => {
+          const b = s.totalBytes ?? 0;
+          if (b >= 1_048_576) return (b / 1_048_576).toFixed(1) + " MB";
+          if (b >= 1024) return (b / 1024).toFixed(1) + " KB";
+          return b + " B";
+        })();
+        const v = s.visitors;
+        const top3 = (s.topEndpoints ?? []).slice(0, 3).map((e, i) =>
+          `  ${i + 1}. \`${e.path}\` — ${e.count} reqs (${e.avgMs}ms avg)`
+        ).join("\n");
+        await sendText(chatId,
+          `🛡 *Trustbit Admin Dashboard*\n\n` +
+          `⏱ *Uptime:* ${uptime}\n` +
+          `📡 *Total Requests:* ${(s.totalRequests ?? 0).toLocaleString()}\n` +
+          `✅ *Success Rate:* ${(s.successRate ?? 0).toFixed(1)}%\n` +
+          `❌ *Total Errors:* ${s.totalErrors ?? 0}\n` +
+          `⚡ *Avg Response:* ${s.avgResponseMs ?? 0}ms\n` +
+          `💾 *Data Served:* ${bytes}\n` +
+          (v ? `\n👥 *Visitors Today:* ${v.todayCount}\n` +
+            `📅 *This Week:* ${v.weekCount}\n` +
+            `📆 *This Month:* ${v.monthCount}\n` +
+            `🌍 *All Time:* ${v.totalCount}\n` : "") +
+          (top3 ? `\n🔥 *Top Endpoints:*\n${top3}\n` : "") +
+          `\n🤖 *Bot Users:* ${registeredUsers.size}\n` +
+          `\n_Last updated: ${new Date().toLocaleTimeString()}_`
+        );
+      } catch { await sendText(chatId, "❌ Admin stats request failed."); }
       break;
     }
 

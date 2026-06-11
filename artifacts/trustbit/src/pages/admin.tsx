@@ -89,7 +89,7 @@ function LockScreen({ onUnlock }: { onUnlock: () => void }) {
     else { setError(true); setTimeout(() => setError(false), 1500); }
   };
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
           <div className="h-16 w-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
@@ -175,9 +175,9 @@ export default function Admin() {
     : [];
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-zinc-950 text-foreground">
       {/* Top bar */}
-      <div className="sticky top-0 z-30 border-b border-border/40 bg-background px-4 md:px-6 py-3 flex items-center justify-between gap-3">
+      <div className="sticky top-0 z-30 border-b border-zinc-800 bg-zinc-950 px-4 md:px-6 py-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
             <Shield className="h-4 w-4 text-primary" />
