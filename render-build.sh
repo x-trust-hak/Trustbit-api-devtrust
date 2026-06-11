@@ -2,7 +2,7 @@
 set -e
 
 echo ">>> Installing dependencies..."
-npx --yes pnpm@9 install --frozen-lockfile
+npx --yes pnpm@9 install --no-frozen-lockfile
 
 echo ">>> Building frontend..."
 PORT=3000 BASE_PATH=/ npx pnpm@9 --filter @workspace/trustbit run build
