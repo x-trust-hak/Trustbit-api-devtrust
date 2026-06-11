@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
-echo ">>> Installing pnpm..."
-npm install -g pnpm@latest
+echo ">>> Enabling pnpm via corepack..."
+corepack enable
+corepack prepare pnpm@latest --activate
 
 echo ">>> Installing dependencies..."
 pnpm install --frozen-lockfile
