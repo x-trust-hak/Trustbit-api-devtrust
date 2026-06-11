@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { InstallPrompt } from "@/components/ui/InstallPrompt";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import NotFound from "@/pages/not-found";
@@ -72,6 +73,7 @@ function App() {
           <Router />
         </WouterRouter>
         <Toaster />
+        <InstallPrompt />
       </TooltipProvider>
     </QueryClientProvider>
   );
