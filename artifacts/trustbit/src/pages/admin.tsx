@@ -283,22 +283,12 @@ export default function Admin() {
                 {hasHourData ? (
                   <ResponsiveContainer width="100%" height={200}>
                     <AreaChart data={stats.hourBuckets} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                      <defs>
-                        <linearGradient id="reqGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#00ffcc" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#00ffcc" stopOpacity={0} />
-                        </linearGradient>
-                        <linearGradient id="errGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" />
                       <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#666" }} tickLine={false} axisLine={false} interval={3} />
                       <YAxis tick={{ fontSize: 10, fill: "#666" }} tickLine={false} axisLine={false} width={32} />
-                      <Tooltip contentStyle={{ background: "#0a0a0a", border: "1px solid #333", borderRadius: 8, fontSize: 12 }} labelStyle={{ color: "#aaa" }} />
-                      <Area type="monotone" dataKey="requests" stroke="#00ffcc" strokeWidth={2} fill="url(#reqGrad)" name="Requests" />
-                      <Area type="monotone" dataKey="errors" stroke="#ef4444" strokeWidth={1.5} fill="url(#errGrad)" name="Errors" />
+                      <Tooltip contentStyle={{ background: "#18181b", border: "1px solid #333", borderRadius: 8, fontSize: 12 }} labelStyle={{ color: "#aaa" }} />
+                      <Area type="monotone" dataKey="requests" stroke="#00ffcc" strokeWidth={2} fill="#00ffcc" fillOpacity={0.1} name="Requests" />
+                      <Area type="monotone" dataKey="errors" stroke="#ef4444" strokeWidth={1.5} fill="#ef4444" fillOpacity={0.1} name="Errors" />
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : (
@@ -360,18 +350,12 @@ export default function Admin() {
                 </div>
                 <ResponsiveContainer width="100%" height={160}>
                   <AreaChart data={stats.hourBuckets} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                    <defs>
-                      <linearGradient id="byteGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" />
                     <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#666" }} tickLine={false} axisLine={false} interval={3} />
                     <YAxis tick={{ fontSize: 10, fill: "#666" }} tickLine={false} axisLine={false} width={40} tickFormatter={(v) => formatBytes(v)} />
-                    <Tooltip contentStyle={{ background: "#0a0a0a", border: "1px solid #333", borderRadius: 8, fontSize: 12 }}
+                    <Tooltip contentStyle={{ background: "#18181b", border: "1px solid #333", borderRadius: 8, fontSize: 12 }}
                       formatter={(v: number) => [formatBytes(v), "Bytes"]} />
-                    <Area type="monotone" dataKey="bytes" stroke="#7c3aed" strokeWidth={2} fill="url(#byteGrad)" name="Bytes" />
+                    <Area type="monotone" dataKey="bytes" stroke="#7c3aed" strokeWidth={2} fill="#7c3aed" fillOpacity={0.1} name="Bytes" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
