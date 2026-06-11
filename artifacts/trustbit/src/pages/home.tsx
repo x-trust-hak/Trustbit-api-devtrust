@@ -127,7 +127,7 @@ export default function Home() {
                     <span className="text-purple-400">await</span>{" "}
                     <span className="text-blue-400">fetch</span>{"("}
                     {"\n  "}
-                    <span className="text-green-400">'https://trustbitapi.replit.app/api/ai/aichat'</span>
+                    <span className="text-green-400">'https://trustbit.app/api/ai/aichat'</span>
                     {"\n  + "}
                     <span className="text-green-400">'?prompt=hello'</span>
                     {"\n);\n"}
