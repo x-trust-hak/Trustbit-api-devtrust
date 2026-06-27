@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 
 const router: IRouter = Router();
 
-const SOURCE_BASE = "https://apis.prexzyvilla.site";
+const SOURCE_BASE = "https://prexzyapis.com";
 
 const BLOCKED_PREFIXES = ["/nsfw", "/home"];
 
