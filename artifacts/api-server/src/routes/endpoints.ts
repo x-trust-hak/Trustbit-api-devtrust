@@ -3,7 +3,7 @@ import { ListEndpointsResponse, ListCategoriesResponse, GetApiStatusResponse } f
 
 const router: IRouter = Router();
 
-const UPSTREAM = "https://apis.prexzyvilla.site";
+const UPSTREAM = "https://prexzyapis.com";
 const EXCLUDED_CATEGORIES = ["NSFW Content"];
 
 const CATEGORY_DESCRIPTIONS: Record<string, string> = {
