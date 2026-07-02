@@ -6,6 +6,7 @@ import {
 import {
   Activity, Server, Clock, TrendingUp, AlertTriangle, CheckCircle2,
   RefreshCw, Lock, Shield, Zap, Database, Eye, Radio, Users,
+  CreditCard, XCircle, UserCheck, ChevronDown, ChevronUp,
 } from "lucide-react";
 
 const ADMIN_KEY = "trustbit-admin-2026";
@@ -125,6 +126,123 @@ function LockScreen({ onUnlock }: { onUnlock: () => void }) {
   );
 }
 
+interface PaymentItem {
+  id: string;
+  username: string;
+  email: string;
+  plan: string;
+  amount: number;
+  status: string;
+  adminNote?: string;
+  screenshotMime: string;
+  screenshotData: string;
+  createdAt: string;
+}
+
+function PaymentsPanel({ adminKey }: { adminKey: string }) {
+  const [payments, setPayments] = useState<PaymentItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [filter, setFilter] = useState<"pending" | "approved" | "declined" | "all">("pending");
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [processing, setProcessing] = useState<string | null>(null);
+
+  const fetchPayments = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/payment/list?key=${adminKey}&status=${filter}`);
+      if (res.ok) {
+        const d = await res.json() as { payments: PaymentItem[] };
+        setPayments(d.payments);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [adminKey, filter]);
+
+  useEffect(() => { fetchPayments(); }, [fetchPayments]);
+
+  const handle = async (id: string, action: "approve" | "decline") => {
+    setProcessing(id);
+    try {
+      await fetch(`/api/payment/${id}/${action}?key=${adminKey}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ note: action === "approve" ? "Payment approved" : "Payment declined" }) });
+      await fetchPayments();
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-border/40 bg-zinc-900 overflow-hidden">
+      <div className="px-4 md:px-5 py-4 border-b border-border/30 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <CreditCard className="h-4 w-4 text-primary" />
+          <h2 className="font-semibold text-sm">Payment Submissions</h2>
+          {payments.length > 0 && <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20">{payments.length}</span>}
+        </div>
+        <div className="flex items-center gap-2">
+          {(["pending", "approved", "declined", "all"] as const).map((f) => (
+            <button key={f} onClick={() => setFilter(f)} className={"text-xs px-2.5 py-1 rounded-lg border transition-colors capitalize " + (filter === f ? "bg-primary/10 border-primary/30 text-primary" : "border-border/40 text-muted-foreground hover:text-foreground")}>
+              {f}
+            </button>
+          ))}
+          <button onClick={fetchPayments} className="text-xs px-2.5 py-1 rounded-lg border border-border/40 text-muted-foreground hover:text-foreground">
+            <RefreshCw className={"h-3 w-3 " + (loading ? "animate-spin" : "")} />
+          </button>
+        </div>
+      </div>
+
+      {payments.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
+          <CreditCard className="h-6 w-6 opacity-30" />
+          <p className="text-sm">{loading ? "Loading..." : "No " + filter + " submissions"}</p>
+        </div>
+      ) : (
+        <div className="divide-y divide-border/20">
+          {payments.map((p) => (
+            <div key={p.id} className="p-4 hover:bg-white/[0.02] transition-colors">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-sm">{p.username}</span>
+                    <span className="text-xs text-muted-foreground">{p.email}</span>
+                    <span className={"text-xs px-2 py-0.5 rounded-full border font-mono " + (p.status === "approved" ? "bg-green-500/10 text-green-400 border-green-500/20" : p.status === "declined" ? "bg-red-500/10 text-red-400 border-red-500/20" : "bg-yellow-500/10 text-yellow-400 border-yellow-500/20")}>
+                      {p.status}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    <span className="capitalize font-medium text-foreground/70">{p.plan}</span> plan — <span className="font-mono text-primary">₦{p.amount.toLocaleString()}</span> — {new Date(p.createdAt).toLocaleString()}
+                  </p>
+                  {p.adminNote && <p className="text-xs text-muted-foreground italic mt-0.5">Note: {p.adminNote}</p>}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {p.status === "pending" && (
+                    <>
+                      <button onClick={() => handle(p.id, "approve")} disabled={processing === p.id} className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500/20 transition-colors disabled:opacity-50">
+                        <UserCheck className="h-3 w-3" /> Approve
+                      </button>
+                      <button onClick={() => handle(p.id, "decline")} disabled={processing === p.id} className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-colors disabled:opacity-50">
+                        <XCircle className="h-3 w-3" /> Decline
+                      </button>
+                    </>
+                  )}
+                  <button onClick={() => setExpanded(expanded === p.id ? null : p.id)} className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-border/40 text-muted-foreground hover:text-foreground transition-colors">
+                    Screenshot {expanded === p.id ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                  </button>
+                </div>
+              </div>
+              {expanded === p.id && (
+                <div className="mt-3 rounded-lg border border-border/30 overflow-hidden bg-black/40">
+                  <img src={`data:${p.screenshotMime};base64,${p.screenshotData}`} alt="Payment screenshot" className="w-full max-h-96 object-contain" />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Admin() {
   const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem("tb_admin") === ADMIN_KEY);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -222,6 +340,13 @@ export default function Admin() {
           </div>
         ) : (
           <>
+            {/* Payments Panel */}
+            <div className="grid grid-cols-2 gap-3">
+              <StatCard icon={CreditCard} label="Pending Payments" value={String((stats as unknown as Record<string, number>)["pendingPayments"] ?? 0)} sub="awaiting review" color="bg-yellow-500/10 text-yellow-400" />
+              <StatCard icon={Users} label="Total Users" value={String((stats as unknown as Record<string, number>)["totalUsers"] ?? 0)} sub="registered accounts" color="bg-blue-500/10 text-blue-400" />
+            </div>
+            <PaymentsPanel adminKey={ADMIN_KEY} />
+
             {/* Visitor Stat Cards */}
             <div className="rounded-xl border border-border/40 bg-zinc-900 p-4 space-y-4">
               <div className="flex items-center gap-2">

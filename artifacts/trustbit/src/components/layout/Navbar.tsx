@@ -1,7 +1,7 @@
 import { Link, useLocation, useLocation as useNav } from "wouter";
-import { Terminal, Activity, BookOpen, Layers, Menu, X, User } from "lucide-react";
+import { Terminal, Activity, BookOpen, Layers, Menu, X, User, LogIn, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
 export function Navbar() {
   const [location] = useLocation();
@@ -10,27 +10,26 @@ export function Navbar() {
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [flash, setFlash] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setIsLoggedIn(!!localStorage.getItem("tb_token"));
+  }, [location]);
 
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
     clickCount.current += 1;
     setFlash(true);
     setTimeout(() => setFlash(false), 150);
-
     if (clickTimer.current) clearTimeout(clickTimer.current);
-
     if (clickCount.current >= 5) {
       clickCount.current = 0;
       setMobileOpen(false);
       navigate("/admin");
       return;
     }
-
     clickTimer.current = setTimeout(() => {
-      if (clickCount.current < 5) {
-        clickCount.current = 0;
-        navigate("/");
-      }
+      if (clickCount.current < 5) { clickCount.current = 0; navigate("/"); }
     }, 1500);
   };
 
@@ -44,92 +43,72 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 md:px-8 flex h-16 items-center justify-between">
-        <button
-          onClick={handleLogoClick}
-          className="flex items-center gap-2 transition-opacity hover:opacity-80 select-none"
-        >
-          <div
-            className={
-              "flex h-8 w-8 items-center justify-center rounded-md font-bold transition-all duration-150 " +
-              (flash ? "bg-primary/60 scale-90" : "bg-primary text-primary-foreground")
-            }
-          >
+        <button onClick={handleLogoClick} className="flex items-center gap-2 transition-opacity hover:opacity-80 select-none">
+          <div className={"flex h-8 w-8 items-center justify-center rounded-md font-bold transition-all duration-150 " + (flash ? "bg-primary/60 scale-90" : "bg-primary text-primary-foreground")}>
             <Terminal size={18} />
           </div>
-          <span className="font-mono font-bold tracking-tight text-lg">
-            Trustbit<span className="text-primary">API</span>
-          </span>
+          <span className="font-mono font-bold tracking-tight text-lg">Trustbit<span className="text-primary">API</span></span>
         </button>
 
-        {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-6">
           {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={
-                "text-sm font-medium transition-colors hover:text-primary flex items-center gap-1.5 " +
-                (location === item.href ? "text-primary" : "text-muted-foreground")
-              }
-            >
-              <item.icon size={14} />
-              {item.label}
+            <Link key={item.href} href={item.href} className={"text-sm font-medium transition-colors hover:text-primary flex items-center gap-1.5 " + (location === item.href ? "text-primary" : "text-muted-foreground")}>
+              <item.icon size={14} /> {item.label}
             </Link>
           ))}
         </nav>
 
         <div className="flex items-center gap-2">
-          <Link href="/docs" className="hidden sm:inline-flex">
-            <Button
-              variant="outline"
-              className="border-primary/20 hover:bg-primary/10 hover:text-primary font-mono text-xs"
-            >
-              GET /api/start
-            </Button>
-          </Link>
+          {isLoggedIn ? (
+            <Link href="/dashboard" className="hidden sm:inline-flex">
+              <Button variant="outline" className="border-primary/20 hover:bg-primary/10 hover:text-primary font-mono text-xs gap-1.5">
+                <LayoutDashboard size={13} /> Dashboard
+              </Button>
+            </Link>
+          ) : (
+            <>
+              <Link href="/login" className="hidden sm:inline-flex">
+                <Button variant="ghost" className="text-muted-foreground hover:text-foreground font-mono text-xs gap-1.5">
+                  <LogIn size={13} /> Sign In
+                </Button>
+              </Link>
+              <Link href="/register" className="hidden sm:inline-flex">
+                <Button className="font-mono text-xs gap-1.5">
+                  Get API Key
+                </Button>
+              </Link>
+            </>
+          )}
 
-          {/* Mobile hamburger */}
-          <button
-            className="md:hidden flex items-center justify-center h-9 w-9 rounded-md border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            onClick={() => setMobileOpen((v) => !v)}
-            aria-label="Toggle menu"
-          >
+          <button className="md:hidden flex items-center justify-center h-9 w-9 rounded-md border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors" onClick={() => setMobileOpen((v) => !v)} aria-label="Toggle menu">
             {mobileOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
       </div>
 
-      {/* Mobile dropdown */}
-      <div
-        className={
-          "md:hidden overflow-hidden transition-all duration-300 ease-in-out border-b border-border/40 bg-background/98 " +
-          (mobileOpen ? "max-h-64 opacity-100" : "max-h-0 opacity-0 pointer-events-none")
-        }
-      >
+      <div className={"md:hidden overflow-hidden transition-all duration-300 ease-in-out border-b border-border/40 bg-background/98 " + (mobileOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0 pointer-events-none")}>
         <nav className="container mx-auto px-4 py-3 flex flex-col gap-1">
           {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setMobileOpen(false)}
-              className={
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors " +
-                (location === item.href
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground")
-              }
-            >
-              <item.icon size={16} />
-              {item.label}
+            <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)} className={"flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors " + (location === item.href ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+              <item.icon size={16} /> {item.label}
             </Link>
           ))}
-          <Link
-            href="/docs"
-            onClick={() => setMobileOpen(false)}
-            className="mt-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-primary/20 text-primary text-sm font-mono font-medium hover:bg-primary/10 transition-colors"
-          >
-            GET /api/start
-          </Link>
+          <div className="border-t border-border/30 mt-1 pt-1">
+            {isLoggedIn ? (
+              <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-primary hover:bg-primary/10 transition-colors">
+                <LayoutDashboard size={16} /> Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link href="/login" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+                  <LogIn size={16} /> Sign In
+                </Link>
+                <Link href="/register" onClick={() => setMobileOpen(false)} className="mt-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-primary/20 text-primary text-sm font-mono font-medium hover:bg-primary/10 transition-colors">
+                  Get API Key
+                </Link>
+              </>
+            )}
+          </div>
         </nav>
       </div>
     </header>

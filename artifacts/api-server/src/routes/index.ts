@@ -5,6 +5,8 @@ import proxyRouter from "./proxy";
 import adminRouter from "./admin";
 import visitorsRouter from "./visitors";
 import telegramRouter from "./telegram";
+import authRouter from "./auth";
+import paymentRouter from "./payment";
 import { metrics } from "../lib/metrics";
 
 const router: IRouter = Router();
@@ -20,6 +22,8 @@ router.use((req: Request, res: Response, next: NextFunction): void => {
   next();
 });
 
+router.use(authRouter);
+router.use(paymentRouter);
 router.use(adminRouter);
 router.use(healthRouter);
 router.use(endpointsRouter);

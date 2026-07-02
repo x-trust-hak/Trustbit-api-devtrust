@@ -13,14 +13,13 @@ const Docs = lazy(() => import("@/pages/docs"));
 const Status = lazy(() => import("@/pages/status"));
 const Admin = lazy(() => import("@/pages/admin"));
 const Portfolio = lazy(() => import("@/pages/portfolio"));
+const Login = lazy(() => import("@/pages/login"));
+const Register = lazy(() => import("@/pages/register"));
+const Dashboard = lazy(() => import("@/pages/dashboard"));
+const Upgrade = lazy(() => import("@/pages/upgrade"));
 
 const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60_000,
-      refetchOnWindowFocus: false,
-    },
-  },
+  defaultOptions: { queries: { staleTime: 60_000, refetchOnWindowFocus: false } },
 });
 
 function PageLoader() {
@@ -31,14 +30,29 @@ function PageLoader() {
   );
 }
 
+const STANDALONE_ROUTES = ["/admin", "/login", "/register", "/dashboard", "/upgrade"];
+
 function Router() {
   return (
     <Switch>
+      {/* Standalone pages — no navbar/footer */}
       <Route path="/admin">
-        <Suspense fallback={<PageLoader />}>
-          <Admin />
-        </Suspense>
+        <Suspense fallback={<PageLoader />}><Admin /></Suspense>
       </Route>
+      <Route path="/login">
+        <Suspense fallback={<PageLoader />}><Login /></Suspense>
+      </Route>
+      <Route path="/register">
+        <Suspense fallback={<PageLoader />}><Register /></Suspense>
+      </Route>
+      <Route path="/dashboard">
+        <Suspense fallback={<PageLoader />}><Dashboard /></Suspense>
+      </Route>
+      <Route path="/upgrade">
+        <Suspense fallback={<PageLoader />}><Upgrade /></Suspense>
+      </Route>
+
+      {/* Main shell — with navbar + footer */}
       <Route>
         <div className="min-h-screen flex flex-col bg-background text-foreground dark selection:bg-primary/30 selection:text-primary">
           <Navbar />
@@ -63,7 +77,10 @@ function Router() {
 function App() {
   useEffect(() => {
     document.documentElement.classList.add("dark");
-    fetch("/api/visitors/ping", { method: "POST" }).catch(() => null);
+    const path = window.location.pathname;
+    if (!STANDALONE_ROUTES.some((r) => path.startsWith(r))) {
+      fetch("/api/visitors/ping", { method: "POST" }).catch(() => null);
+    }
   }, []);
 
   return (
