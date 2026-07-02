@@ -162,4 +162,23 @@
     color: hsl(var(--muted-foreground));
     pointer-events: none;
   }
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.animate-ticker {
+  animation: ticker 28s linear infinite;
+  width: max-content;
+}
+.animate-ticker:hover {
+  animation-play-state: paused;
 }
