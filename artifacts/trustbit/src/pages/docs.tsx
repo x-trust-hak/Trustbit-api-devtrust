@@ -4,7 +4,8 @@ import {
   Search, Copy, Check, Terminal, Zap, Send, ChevronDown, ChevronUp,
   Image as ImageIcon, Volume2, Loader2, XCircle, Clock,
   BookOpen, KeyRound, CreditCard, UserPlus, Globe, Info,
-  Brain, Download, Mic, Film, Gamepad2, Wand2, Layers, Link2, AlignLeft, Phone
+  Brain, Download, Mic, Film, Gamepad2, Wand2, Layers, Link2, AlignLeft, Phone,
+  ShieldCheck, CheckCircle2, AlertCircle, Sparkles, Star, Building2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
