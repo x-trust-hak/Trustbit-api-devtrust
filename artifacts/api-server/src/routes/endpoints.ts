@@ -3,29 +3,51 @@ import { ListEndpointsResponse, ListCategoriesResponse, GetApiStatusResponse } f
 
 const router: IRouter = Router();
 
-const UPSTREAM = "https://apis.prexzyvilla.site";
+const UPSTREAM = "https://prexzyapis.com";
 const EXCLUDED_CATEGORIES = ["NSFW Content"];
 
+const CATEGORY_NAME_MAP: Record<string, string> = {
+  "Artificial Intelligence": "AI Suite",
+  "Image Generation": "AI Imaging",
+  "Anime": "Anime Hub",
+  "Downloader": "Media Fetch",
+  "Games": "GameZone",
+  "Image Creator": "Image Studio",
+  "Movies": "CinemaDB",
+  "Search": "Search Engine",
+  "Random": "Discovery",
+  "Audio": "Audio Vault",
+  "Sports": "Live Sports",
+  "Screenshot Website": "Web Capture",
+  "Stalk": "Profile Lookup",
+  "Text Maker": "Text FX",
+  "Tools": "Dev Tools",
+  "Url Shortner": "Link Shrink",
+  "StyleText": "Font Forge",
+  "Text To Speech": "Voice Synth",
+  "Virtual Number": "SMS Inbox",
+};
+
 const CATEGORY_DESCRIPTIONS: Record<string, string> = {
-  "Artificial Intelligence": "Chat, reasoning, code generation, image and music AI endpoints",
-  "Image Generation": "Generate images in various artistic styles using AI",
-  "Anime": "Anime search, streaming, episodes, reactions and metadata",
-  "Downloader": "Download media from TikTok, YouTube, Instagram and more",
-  "Games": "Game data, stats, quizzes and information endpoints",
-  "Image Creator": "Create and manipulate images with custom text overlays",
-  "Movies": "Movie and TV show search, details, and recommendations",
-  "Search": "Search across web, YouTube, GitHub, lyrics and more",
-  "Random": "Random images, anime characters, quotes and fun content",
-  "Audio": "FreeSound search, download and audio utilities",
-  "Sports": "Live football, basketball, and other sports scores",
-  "Screenshot Website": "Capture full-page screenshots of any website URL",
-  "Stalk": "Lookup social media profiles: TikTok, Instagram, Twitter, YouTube",
-  "Text Maker": "Generate styled text images with glitch, neon, galaxy and more effects",
-  "Tools": "GeoIP, code compiler, translators, HTML tools and utilities",
-  "Url Shortner": "Shorten URLs with da.gd, v.gd, spoo.me and others",
-  "StyleText": "Convert plain text into stylized Unicode fonts instantly",
-  "Text To Speech": "Convert text to speech using 100+ voice styles and languages",
-  "Virtual Number": "Access virtual phone numbers to receive SMS messages",
+  "AI Suite": "Conversational AI, reasoning, code generation, and music intelligence",
+  "AI Imaging": "Generate stunning images in any artistic style powered by AI models",
+  "Anime Hub": "Anime search, episode streaming, character reactions and rich metadata",
+  "Media Fetch": "Instantly download media from TikTok, YouTube, Instagram and more",
+  "GameZone": "Game stats, leaderboards, trivia and live gaming data endpoints",
+  "Image Studio": "Create and manipulate images with custom text overlays and effects",
+  "CinemaDB": "Movie and TV show search, cast details and smart recommendations",
+  "Search Engine": "Search across the web, YouTube, GitHub, lyrics and beyond",
+  "Discovery": "Random anime art, quotes, characters and fun surprise content",
+  "Audio Vault": "Search, stream and download audio from free sound libraries",
+  "Live Sports": "Real-time football, basketball and multi-sport live scores",
+  "Web Capture": "Capture instant full-page screenshots of any URL on demand",
+  "Profile Lookup": "Look up public profiles across TikTok, Instagram, Twitter and YouTube",
+  "Text FX": "Generate styled text images — glitch, neon, galaxy, fire and more",
+  "Dev Tools": "GeoIP lookup, code compiler, translator, HTML tools and utilities",
+  "Link Shrink": "Shorten any URL using da.gd, v.gd, spoo.me and other providers",
+  "Font Forge": "Transform plain text into stylized Unicode fonts in seconds",
+  "Voice Synth": "Convert text to lifelike speech using 100+ voice styles and languages",
+  "SMS Inbox": "Access virtual phone numbers worldwide to receive SMS messages",
 };
 
 type RawCategory = { name: string; items: Array<Record<string, { desc: string; path: string }>> };
@@ -52,16 +74,17 @@ function buildCategoryMap(rawCategories: RawCategory[]): Map<string, MergedCateg
   const filtered = rawCategories.filter((c) => !EXCLUDED_CATEGORIES.includes(c.name));
   const map = new Map<string, MergedCategory>();
   for (const cat of filtered) {
+    const displayName = CATEGORY_NAME_MAP[cat.name] ?? cat.name;
     const items = cat.items.map((item) => {
       const [name, info] = Object.entries(item)[0];
       return { name, desc: info.desc, path: info.path };
     });
-    if (map.has(cat.name)) {
-      const ex = map.get(cat.name)!;
+    if (map.has(displayName)) {
+      const ex = map.get(displayName)!;
       ex.items.push(...items);
       ex.count = ex.items.length;
     } else {
-      map.set(cat.name, { name: cat.name, count: items.length, items });
+      map.set(displayName, { name: displayName, count: items.length, items });
     }
   }
   for (const cat of map.values()) {
