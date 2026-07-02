@@ -60,83 +60,105 @@ const CACHE_TTL = 5 * 60 * 1000;
 async function fetchUpstream(): Promise<{ endpoints?: RawCategory[] }> {
   const now = Date.now();
   if (cachedEndpoints && now - cacheTime < CACHE_TTL) return cachedEndpoints;
-  const res = await fetch(`${UPSTREAM}/endpoints`, {
+  const res = await fetch(`${UPSTREAM}/api/list`, {
     headers: { "User-Agent": "TrustbitAPI/1.0" },
     signal: AbortSignal.timeout(15000),
   });
-  const data = (await res.json()) as { endpoints?: RawCategory[] };
+  if (!res.ok) throw new Error(`Upstream returned ${res.status}`);
+  const data = await res.json() as { endpoints?: RawCategory[] };
   cachedEndpoints = data;
   cacheTime = now;
   return data;
 }
 
-function buildCategoryMap(rawCategories: RawCategory[]): Map<string, MergedCategory> {
-  const filtered = rawCategories.filter((c) => !EXCLUDED_CATEGORIES.includes(c.name));
+function mergeCategories(raw: RawCategory[]): MergedCategory[] {
   const map = new Map<string, MergedCategory>();
-  for (const cat of filtered) {
-    const displayName = CATEGORY_NAME_MAP[cat.name] ?? cat.name;
-    const items = cat.items.map((item) => {
-      const [name, info] = Object.entries(item)[0];
-      return { name, desc: info.desc, path: info.path };
-    });
-    if (map.has(displayName)) {
-      const ex = map.get(displayName)!;
-      ex.items.push(...items);
-      ex.count = ex.items.length;
-    } else {
-      map.set(displayName, { name: displayName, count: items.length, items });
+
+  for (const cat of raw) {
+    const mappedName = CATEGORY_NAME_MAP[cat.name] ?? cat.name;
+    if (EXCLUDED_CATEGORIES.includes(cat.name) || EXCLUDED_CATEGORIES.includes(mappedName)) continue;
+
+    if (!map.has(mappedName)) {
+      map.set(mappedName, { name: mappedName, count: 0, items: [] });
+    }
+    const entry = map.get(mappedName)!;
+
+    for (const itemObj of cat.items) {
+      for (const [name, meta] of Object.entries(itemObj)) {
+        const path = meta.path.startsWith("/") ? meta.path : "/" + meta.path;
+        const exists = entry.items.some((i) => i.path === path);
+        if (!exists) {
+          entry.items.push({ name, desc: meta.desc, path });
+          entry.count++;
+        }
+      }
     }
   }
-  for (const cat of map.values()) {
-    cat.items.sort((a, b) => a.name.localeCompare(b.name));
-  }
-  return map;
+
+  return Array.from(map.values()).filter((c) => c.items.length > 0);
 }
 
 router.get("/endpoints", async (req, res): Promise<void> => {
   try {
     const data = await fetchUpstream();
-    const map = buildCategoryMap(data.endpoints ?? []);
-    const categories = Array.from(map.values());
-    const totalEndpoints = categories.reduce((s, c) => s + c.count, 0);
-    res.json(ListEndpointsResponse.parse({ status: true, creator: "trustbit", totalEndpoints, categories }));
+    const raw = data.endpoints ?? [];
+    const categories = mergeCategories(raw);
+    const totalEndpoints = categories.reduce((sum, c) => sum + c.count, 0);
+
+    const parsed = ListEndpointsResponse.safeParse({ categories, totalEndpoints });
+    if (!parsed.success) {
+      res.json({ categories, totalEndpoints });
+      return;
+    }
+    res.json(parsed.data);
   } catch (err) {
-    req.log.error({ err }, "Failed to fetch endpoints");
-    res.status(502).json({ status: false, error: "Failed to retrieve endpoints" });
+    res.status(502).json({ error: "Failed to fetch endpoints from upstream" });
   }
 });
 
 router.get("/categories", async (req, res): Promise<void> => {
   try {
     const data = await fetchUpstream();
-    const map = buildCategoryMap(data.endpoints ?? []);
-    const categories = Array.from(map.values()).map((cat) => ({
-      name: cat.name,
-      slug: cat.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
-      count: cat.count,
-      description: CATEGORY_DESCRIPTIONS[cat.name] ?? cat.name + " endpoints",
+    const raw = data.endpoints ?? [];
+    const merged = mergeCategories(raw);
+
+    const categories = merged.map((c) => ({
+      name: c.name,
+      slug: c.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      count: c.count,
+      description: CATEGORY_DESCRIPTIONS[c.name] ?? `${c.name} endpoints`,
     }));
-    res.json(ListCategoriesResponse.parse({ status: true, categories, total: categories.length }));
+
+    const parsed = ListCategoriesResponse.safeParse({ categories, total: categories.length });
+    if (!parsed.success) {
+      res.json({ categories, total: categories.length });
+      return;
+    }
+    res.json(parsed.data);
   } catch (err) {
-    req.log.error({ err }, "Failed to fetch categories");
-    res.status(502).json({ status: false, error: "Failed to retrieve categories" });
+    res.status(502).json({ error: "Failed to fetch categories from upstream" });
   }
 });
 
-router.get("/status", async (_req, res): Promise<void> => {
+router.get("/status", async (req, res): Promise<void> => {
   try {
     const data = await fetchUpstream();
-    const map = buildCategoryMap(data.endpoints ?? []);
-    const total = Array.from(map.values()).reduce((s, c) => s + c.count, 0);
-    res.json(GetApiStatusResponse.parse({
-      status: "active",
-      platform: "Trustbit API",
-      totalEndpoints: total,
-      uptime: process.uptime(),
+    const raw = data.endpoints ?? [];
+    const categories = mergeCategories(raw);
+    const totalEndpoints = categories.reduce((sum, c) => sum + c.count, 0);
+
+    const payload = {
+      status: "operational",
       version: "1.0.0",
-    }));
-  } catch {
-    res.json(GetApiStatusResponse.parse({ status: "active", platform: "Trustbit API", totalEndpoints: 545, uptime: process.uptime(), version: "1.0.0" }));
+      uptime: process.uptime(),
+      totalEndpoints,
+      categories: categories.length,
+    };
+
+    const parsed = GetApiStatusResponse.safeParse(payload);
+    res.json(parsed.success ? parsed.data : payload);
+  } catch (err) {
+    res.status(502).json({ error: "Upstream unreachable" });
   }
 });
 
