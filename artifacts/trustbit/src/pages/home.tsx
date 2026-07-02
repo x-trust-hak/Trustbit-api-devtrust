@@ -1,12 +1,16 @@
 import { Link } from "wouter";
-import { ArrowRight, Terminal, Zap, Layers, Code, Shield } from "lucide-react";
+import { ArrowRight, Terminal, Zap, Layers, Code, Shield, KeyRound, CreditCard, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetApiStatus, useListCategories } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const DYNAMIC_BASE = typeof window !== "undefined" ? window.location.origin : "https://trustbit.app";
+
 export default function Home() {
   const { data: statusData, isLoading: isLoadingStatus } = useGetApiStatus();
   const { data: categoriesData, isLoading: isLoadingCategories } = useListCategories();
+
+  const version = statusData?.version ?? "1.0.0";
 
   return (
     <div className="flex flex-col w-full">
@@ -17,7 +21,7 @@ export default function Home() {
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-sm font-medium text-primary mb-6 md:mb-8">
               <Zap className="mr-2 h-3.5 w-3.5" />
-              <span>v1.0.0 is now live</span>
+              <span>v{version} is now live</span>
             </div>
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight mb-5 md:mb-6 text-balance">
               The secret weapon in every{" "}
@@ -26,7 +30,7 @@ export default function Home() {
               </span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-8 md:mb-10 max-w-2xl mx-auto leading-relaxed">
-              Instant access to AI, anime, downloaders, tools, and more.
+              Instant access to AI, anime, media downloading, voice synthesis, and more.
               One unified API. Zero friction. Built for speed.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4">
@@ -54,11 +58,11 @@ export default function Home() {
             {[
               {
                 label: "Endpoints",
-                value: isLoadingStatus ? null : (statusData?.totalEndpoints ?? "550+"),
+                value: isLoadingStatus ? null : (statusData?.totalEndpoints ?? "545+"),
               },
               {
                 label: "Categories",
-                value: isLoadingCategories ? null : (categoriesData?.total ?? "19+"),
+                value: isLoadingCategories ? null : (categoriesData?.total ?? "19"),
               },
               { label: "Uptime", value: "99.9%" },
               { label: "Latency", value: "<50ms" },
@@ -91,9 +95,9 @@ export default function Home() {
             </p>
             <div className="space-y-5 md:space-y-6">
               {[
-                { icon: Layers, title: "Unified Architecture", desc: "One structure to learn. Use it everywhere." },
+                { icon: Layers, title: "Unified Architecture", desc: "One base URL, one structure. Use it everywhere." },
                 { icon: Shield, title: "Enterprise Grade", desc: "Built on edge infrastructure for minimal latency." },
-                { icon: Code, title: "Developer First", desc: "Types, clear errors, and copy-paste examples." },
+                { icon: Code, title: "Developer First", desc: "Clear errors, copy-paste examples, and live tester." },
               ].map((feature, i) => (
                 <div key={i} className="flex gap-4">
                   <div className="flex h-10 w-10 md:h-12 md:w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 border border-primary/20 text-primary">
@@ -127,7 +131,7 @@ export default function Home() {
                     <span className="text-purple-400">await</span>{" "}
                     <span className="text-blue-400">fetch</span>{"("}
                     {"\n  "}
-                    <span className="text-green-400">'https://trustbitapi.replit.app/api/ai/aichat'</span>
+                    <span className="text-green-400">`{DYNAMIC_BASE}/api/ai/aichat`</span>
                     {"\n  + "}
                     <span className="text-green-400">'?prompt=hello'</span>
                     {"\n);\n"}
@@ -148,13 +152,64 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Coming Soon — Auth & Billing */}
+      <section className="py-16 md:py-20 border-t border-border/40 bg-card/10">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10">
+            <span className="inline-flex items-center rounded-full border border-yellow-500/30 bg-yellow-500/10 px-3 py-1 text-sm font-medium text-yellow-400 mb-4">
+              <Zap className="mr-2 h-3.5 w-3.5" />
+              Coming Soon
+            </span>
+            <h2 className="text-2xl md:text-3xl font-bold mb-3">The full platform is on its way.</h2>
+            <p className="text-muted-foreground max-w-xl mx-auto text-base md:text-lg">
+              We're building a complete developer ecosystem — from accounts to billing to API key management.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            {[
+              {
+                icon: UserPlus,
+                title: "User Registration & Login",
+                desc: "Create an account, log in securely, and manage your profile and usage from a personal dashboard.",
+                badge: "Phase 1",
+              },
+              {
+                icon: KeyRound,
+                title: "API Key System",
+                desc: "Each account gets a unique API key. Pass it with every request for authenticated access, rate-limit tracking, and usage analytics.",
+                badge: "Phase 2",
+              },
+              {
+                icon: CreditCard,
+                title: "Billing & Plans",
+                desc: "Free tier with generous limits. Upgrade to Pro or Enterprise for higher rate limits, priority routing, and dedicated support.",
+                badge: "Phase 3",
+              },
+            ].map((item, i) => (
+              <div key={i} className="rounded-xl border border-border/40 bg-card/30 p-6 hover:border-primary/30 transition-colors">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 border border-primary/20 text-primary">
+                    <item.icon size={18} />
+                  </div>
+                  <span className="text-xs font-mono text-muted-foreground border border-border/50 rounded-full px-2 py-0.5">
+                    {item.badge}
+                  </span>
+                </div>
+                <h3 className="font-semibold text-base mb-2">{item.title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-16 md:py-24 border-t border-border/40 bg-card/20 relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] md:w-[800px] h-[300px] md:h-[400px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
         <div className="container mx-auto px-4 text-center relative z-10">
           <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold mb-4 md:mb-6">Ready to start building?</h2>
           <p className="text-muted-foreground text-base md:text-xl mb-8 md:mb-10 max-w-2xl mx-auto">
-            Explore our comprehensive documentation and start integrating Trustbit API into your applications today.
+            Explore the full documentation, test endpoints live in your browser, and start integrating Trustbit API today — no sign-up required.
           </p>
           <Link href="/docs">
             <Button size="lg" className="h-12 md:h-14 px-8 md:px-10 font-mono text-sm md:text-base">
