@@ -1,8 +1,9 @@
 import { useState, useMemo, useRef } from "react";
+import { Link } from "wouter";
 import { useListEndpoints, useListCategories } from "@workspace/api-client-react";
 import {
   Search, Copy, Check, Terminal, Zap, Send, ChevronDown, ChevronUp,
-  Image as ImageIcon, Volume2, Loader2, XCircle, Clock,
+  Image as ImageIcon, Volume2, Loader2, XCircle, Clock, KeyRound, LogIn,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,18 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+
+function getStoredApiKey(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem("tb_user");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { apiKey?: string };
+    return parsed.apiKey ?? null;
+  } catch {
+    return null;
+  }
+}
 
 const BASE_URL = typeof window !== "undefined" ? window.location.origin : "";
 
@@ -68,12 +81,17 @@ function TryItPanel({ path }: { path: string }) {
   const setValue = (name: string, val: string) => setValues((prev) => ({ ...prev, [name]: val }));
 
   const handleSend = async () => {
+    const apiKey = getStoredApiKey();
+    if (!apiKey) {
+      setResponse({ type: "error", status: 0, ms: 0, message: "SIGN_IN_REQUIRED" });
+      return;
+    }
     if (objectUrlRef.current) { URL.revokeObjectURL(objectUrlRef.current); objectUrlRef.current = null; }
     setResponse({ type: "loading" });
     const url = buildUrl(path, values);
     const t0 = Date.now();
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, { headers: { "x-api-key": apiKey } });
       const ms = Date.now() - t0;
       const ct = res.headers.get("content-type") ?? "";
       if (ct.includes("image/")) {
@@ -124,7 +142,20 @@ function TryItPanel({ path }: { path: string }) {
           {response.type === "loading" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
           {response.type === "loading" ? "Sending..." : "Send Request"}
         </Button>
-        {response.type !== "idle" && response.type !== "loading" && (
+        {response.type === "error" && response.message === "SIGN_IN_REQUIRED" && (
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 flex flex-col items-center text-center gap-3">
+            <KeyRound className="h-6 w-6 text-primary" />
+            <div>
+              <p className="text-sm font-semibold">Sign in required to test endpoints</p>
+              <p className="text-xs text-muted-foreground mt-1">Create a free account to get your API key and 100 free credits.</p>
+            </div>
+            <div className="flex gap-2">
+              <Link href="/register"><Button size="sm" className="font-mono text-xs gap-1.5"><Terminal className="h-3.5 w-3.5" /> Create free account</Button></Link>
+              <Link href="/login"><Button size="sm" variant="outline" className="font-mono text-xs gap-1.5"><LogIn className="h-3.5 w-3.5" /> Sign in</Button></Link>
+            </div>
+          </div>
+        )}
+        {response.type !== "idle" && response.type !== "loading" && !(response.type === "error" && response.message === "SIGN_IN_REQUIRED") && (
           <div className="rounded-lg border border-border/40 bg-black/60 overflow-hidden">
             <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-muted/10">
               {response.type === "error" ? <XCircle className="h-3.5 w-3.5 text-red-400" /> : response.type === "image" ? <ImageIcon className="h-3.5 w-3.5 text-blue-400" /> : response.type === "audio" ? <Volume2 className="h-3.5 w-3.5 text-purple-400" /> : <Terminal className="h-3.5 w-3.5 text-green-400" />}

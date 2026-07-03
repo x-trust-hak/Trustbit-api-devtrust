@@ -243,6 +243,100 @@ function PaymentsPanel({ adminKey }: { adminKey: string }) {
   );
 }
 
+interface SearchUser {
+  _id: string;
+  username: string;
+  email: string;
+  plan: string;
+  credits: number;
+  unlimited: boolean;
+  totalRequests: number;
+}
+
+function UsersPanel({ adminKey }: { adminKey: string }) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchUser[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [updating, setUpdating] = useState<string | null>(null);
+
+  const search = async () => {
+    if (!query.trim()) { setResults([]); return; }
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/search?key=${adminKey}&q=${encodeURIComponent(query.trim())}`);
+      if (res.ok) {
+        const d = await res.json() as { users: SearchUser[] };
+        setResults(d.users);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleUnlimited = async (email: string, unlimited: boolean) => {
+    setUpdating(email);
+    try {
+      await fetch(`/api/admin/users/unlimited?key=${adminKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, unlimited }),
+      });
+      await search();
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-border/40 bg-zinc-900 overflow-hidden">
+      <div className="px-4 md:px-5 py-4 border-b border-border/30 flex items-center gap-2">
+        <Users className="h-4 w-4 text-primary" />
+        <h2 className="font-semibold text-sm">User Lookup &amp; Unlimited Access</h2>
+      </div>
+      <div className="p-4 space-y-3">
+        <div className="flex gap-2">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && search()}
+            placeholder="Search by email or username..."
+            className="flex-1 h-9 px-3 text-sm rounded-lg bg-background border border-border/50 focus:outline-none focus:border-primary/50"
+          />
+          <button onClick={search} disabled={loading} className="text-xs px-3 py-2 rounded-lg border border-border/40 hover:border-primary/30 text-muted-foreground hover:text-foreground disabled:opacity-50">
+            {loading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : "Search"}
+          </button>
+        </div>
+        {results.length > 0 && (
+          <div className="divide-y divide-border/20 rounded-lg border border-border/30 overflow-hidden">
+            {results.map((u) => (
+              <div key={u._id} className="p-3 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-sm">{u.username}</span>
+                    <span className="text-xs text-muted-foreground truncate">{u.email}</span>
+                    {u.unlimited && <span className="text-xs px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">unlimited</span>}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {u.plan} · {u.unlimited ? "∞ credits" : u.credits + " credits"} · {u.totalRequests} requests
+                  </p>
+                </div>
+                <button
+                  onClick={() => toggleUnlimited(u.email, !u.unlimited)}
+                  disabled={updating === u.email}
+                  className={"shrink-0 text-xs px-2.5 py-1.5 rounded-lg border transition-colors disabled:opacity-50 " +
+                    (u.unlimited ? "bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20" : "bg-green-500/10 border-green-500/20 text-green-400 hover:bg-green-500/20")}
+                >
+                  {u.unlimited ? "Revoke Unlimited" : "Grant Unlimited"}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Admin() {
   const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem("tb_admin") === ADMIN_KEY);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -346,6 +440,7 @@ export default function Admin() {
               <StatCard icon={Users} label="Total Users" value={String((stats as unknown as Record<string, number>)["totalUsers"] ?? 0)} sub="registered accounts" color="bg-blue-500/10 text-blue-400" />
             </div>
             <PaymentsPanel adminKey={ADMIN_KEY} />
+            <UsersPanel adminKey={ADMIN_KEY} />
 
             {/* Visitor Stat Cards */}
             <div className="rounded-xl border border-border/40 bg-zinc-900 p-4 space-y-4">

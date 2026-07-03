@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { ArrowRight, Terminal, Zap, Layers, Code, Shield, Activity, Globe, Cpu, Music, Image, Download, Search, MessageSquare, Bot } from "lucide-react";
+import { ArrowRight, Terminal, Zap, Layers, Code, Shield, Activity, Globe, Cpu, Music, Image, Download, Search, MessageSquare, Bot, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetApiStatus, useListCategories } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,11 +15,11 @@ const CATEGORY_PILLS = [
 ];
 
 const FEATURES = [
-  { icon: Zap, title: "Zero Auth to Start", desc: "Hit any endpoint instantly — no key, no signup, no wait." },
+  { icon: Zap, title: "Instant Setup", desc: "Sign up in seconds, grab your key, and start calling endpoints." },
   { icon: Layers, title: "19 Categories", desc: "AI, TTS, anime, media, tools and more under one roof." },
   { icon: Shield, title: "Always On", desc: "99.9% uptime backed by redundant global infrastructure." },
-  { icon: Code, title: "Live Tester", desc: "Try every endpoint directly in the browser." },
-  { icon: Globe, title: "No Rate Surprise", desc: "Generous limits. No hidden throttles. Just build." },
+  { icon: Code, title: "Live Tester", desc: "Try every endpoint directly in the browser once signed in." },
+  { icon: Globe, title: "Fair Usage", desc: "Free credits to start, with rate limits to keep things fast for everyone." },
   { icon: Cpu, title: "Blazing Fast", desc: "Edge-optimized proxy. Sub-50ms median response." },
 ];
 
@@ -129,7 +129,7 @@ export default function Home() {
             {/* Badge */}
             <div className="inline-flex items-center rounded-full border border-primary/25 bg-primary/8 px-3.5 py-1.5 text-xs sm:text-sm font-mono text-primary mb-7 md:mb-10 backdrop-blur-sm">
               <span className="mr-2 h-2 w-2 rounded-full bg-primary inline-block animate-pulse" />
-              v{version} · Free · No key required
+              v{version} · Free to start · Sign up for your API key
             </div>
 
             {/* Headline — scales down for small phones */}
@@ -142,22 +142,22 @@ export default function Home() {
 
             <p className="text-sm sm:text-base md:text-xl text-muted-foreground mb-8 md:mb-10 max-w-xl mx-auto leading-relaxed px-2">
               545+ endpoints across AI, anime, media, voice synthesis, and more.
-              One base URL. Zero friction. Start building in seconds.
+              One base URL. Create a free account and start building in seconds.
             </p>
 
             {/* CTA buttons */}
             <div className="flex flex-col xs:flex-row items-center justify-center gap-3 px-4 sm:px-0">
-              <Link href="/docs" className="w-full sm:w-auto">
+              <Link href="/register" className="w-full sm:w-auto">
                 <Button size="lg" className="w-full sm:w-auto h-12 px-6 sm:px-8 font-mono text-sm group bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
                   <Terminal className="mr-2 h-4 w-4 shrink-0" />
-                  Explore Endpoints
+                  Get Your Free API Key
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1 shrink-0" />
                 </Button>
               </Link>
-              <Link href="/status" className="w-full sm:w-auto">
+              <Link href="/docs" className="w-full sm:w-auto">
                 <Button size="lg" variant="outline" className="w-full sm:w-auto h-12 px-6 sm:px-8 border-border/50 hover:bg-card hover:border-primary/30">
-                  <Activity className="mr-2 h-4 w-4 shrink-0" />
-                  Platform Status
+                  <BookOpen className="mr-2 h-4 w-4 shrink-0" />
+                  Browse Docs
                 </Button>
               </Link>
             </div>
@@ -248,8 +248,8 @@ export default function Home() {
                 Built for builders<br className="hidden sm:block" /> who hate waiting.
               </h2>
               <p className="mt-3 text-muted-foreground text-sm md:text-base leading-relaxed">
-                No OAuth flows. No credit card forms. No quota emails.
-                Just copy a URL and ship.
+                No credit card forms. No approval delays.
+                Sign up, grab your key, and ship.
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -311,14 +311,14 @@ export default function Home() {
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">right now.</span>
           </h2>
           <p className="text-muted-foreground text-sm sm:text-base md:text-lg mb-8 md:mb-10 max-w-lg mx-auto px-2">
-            No account. No key. No limit on exploration.
+            Free to sign up. 100 credits included.
             Read the docs, run the endpoints live, ship something cool.
           </p>
           <div className="flex flex-col xs:flex-row items-center justify-center gap-3 px-4 sm:px-0">
-            <Link href="/docs" className="w-full sm:w-auto">
+            <Link href="/register" className="w-full sm:w-auto">
               <Button size="lg" className="w-full sm:w-auto h-12 px-8 font-mono shadow-xl shadow-primary/20 group">
                 <Terminal className="mr-2 h-4 w-4 shrink-0" />
-                Open the Docs
+                Create Free Account
                 <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform shrink-0" />
               </Button>
             </Link>

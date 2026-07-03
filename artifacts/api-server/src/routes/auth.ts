@@ -105,7 +105,7 @@ router.get("/auth/me", async (req: Request, res: Response): Promise<void> => {
       res.status(404).json({ error: "User not found" });
       return;
     }
-    res.json({ id: user._id, username: user.username, email: user.email, apiKey: user.apiKey, plan: user.plan, credits: user.credits, totalRequests: user.totalRequests, createdAt: user.createdAt });
+    res.json({ id: user._id, username: user.username, email: user.email, apiKey: user.apiKey, plan: user.plan, credits: user.unlimited ? -1 : user.credits, unlimited: user.unlimited, totalRequests: user.totalRequests, createdAt: user.createdAt });
   } catch (err) {
     req.log.error({ err }, "Me failed");
     res.status(500).json({ error: "Failed to fetch user" });

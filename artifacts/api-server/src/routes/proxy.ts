@@ -8,21 +8,40 @@ const ZSTLAB_API_KEY = process.env.ZSTLAB_API_KEY;
 
 const BLOCKED_PREFIXES = ["/nsfw", "/home"];
 
-function rewriteCreator(body: unknown): unknown {
-  if (typeof body !== "object" || body === null) return body;
-  if (Array.isArray(body)) return body.map(rewriteCreator);
-  const obj = body as Record<string, unknown>;
-  const result: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(obj)) {
-    if (k === "creator") {
-      result[k] = "trustbit";
-    } else if (typeof v === "object") {
-      result[k] = rewriteCreator(v);
-    } else {
-      result[k] = v;
+const OMIT_KEYS = new Set(["apiUrl", "api_url", "source", "sourceUrl", "source_url", "host", "poweredBy", "powered_by"]);
+
+const BRAND_PATTERNS: [RegExp, string][] = [
+  [/zstlab\.cyou/gi, "trustbit.app"],
+  [/zst[\s-]*labs?/gi, "Trustbit"],
+  [/godszeal/gi, "Trustbit Team"],
+  [/prexzyapis\.com/gi, "trustbit.app"],
+  [/prexzy\s*apis?/gi, "Trustbit"],
+  [/\bprexzy\b/gi, "Trustbit"],
+];
+
+function scrubString(s: string): string {
+  let out = s;
+  for (const [pattern, repl] of BRAND_PATTERNS) out = out.replace(pattern, repl);
+  return out;
+}
+
+function sanitizeBody(body: unknown): unknown {
+  if (typeof body === "string") return scrubString(body);
+  if (Array.isArray(body)) return body.map(sanitizeBody);
+  if (typeof body === "object" && body !== null) {
+    const obj = body as Record<string, unknown>;
+    const result: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(obj)) {
+      if (k === "creator") {
+        result[k] = "trustbit";
+        continue;
+      }
+      if (OMIT_KEYS.has(k)) continue;
+      result[k] = sanitizeBody(v);
     }
+    return result;
   }
-  return result;
+  return body;
 }
 
 router.use(async (req, res, next): Promise<void> => {
@@ -73,10 +92,13 @@ router.use(async (req, res, next): Promise<void> => {
     const text = await response.text();
     try {
       const json = JSON.parse(text);
-      const rewritten = rewriteCreator(json);
-      res.status(response.status).json(rewritten);
+      const sanitized = sanitizeBody(json);
+      res.status(response.status).json(sanitized);
     } catch {
-      res.status(response.status).set("Content-Type", contentType || "text/plain").send(text);
+      res.status(response.status).json({
+        status: false,
+        error: response.status === 404 ? "Endpoint not found" : "Upstream error occurred. Please try again.",
+      });
     }
   } catch (err) {
     next(err);

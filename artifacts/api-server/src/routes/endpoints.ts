@@ -7,6 +7,21 @@ const UPSTREAM = "https://prexzyapis.com";
 const ZSTLAB_UPSTREAM = "https://zstlab.cyou";
 const EXCLUDED_CATEGORIES = ["NSFW Content"];
 
+const BRAND_PATTERNS: [RegExp, string][] = [
+  [/zstlab\.cyou/gi, "trustbit.app"],
+  [/zst[\s-]*labs?/gi, "Trustbit"],
+  [/godszeal/gi, "Trustbit Team"],
+  [/prexzyapis\.com/gi, "trustbit.app"],
+  [/prexzy\s*apis?/gi, "Trustbit"],
+  [/\bprexzy\b/gi, "Trustbit"],
+];
+
+function scrubBranding(s: string): string {
+  let out = s;
+  for (const [pattern, repl] of BRAND_PATTERNS) out = out.replace(pattern, repl);
+  return out;
+}
+
 const CATEGORY_NAME_MAP: Record<string, string> = {
   "Artificial Intelligence": "AI Suite",
   "Image Generation": "AI Imaging",
@@ -217,8 +232,8 @@ function mergeZstlabIntoMap(map: Map<string, MergedCategory>, raw: ZstlabEndpoin
     const path = "/zst" + ep.path.replace(/^\/api/, "");
     const exists = entry.items.some((i) => i.path === path);
     if (!exists) {
-      const name = ep.summary || ep.id || path;
-      const desc = ep.description || `${ep.method} ${path}`;
+      const name = scrubBranding(ep.summary || ep.id || path);
+      const desc = scrubBranding(ep.description || `${ep.method} ${path}`);
       entry.items.push({ name, desc, path });
       entry.count++;
     }

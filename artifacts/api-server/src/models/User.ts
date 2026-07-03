@@ -8,6 +8,7 @@ export interface IUser extends Document {
   apiKey: string;
   plan: "free" | "biweekly" | "monthly" | "lifetime";
   credits: number;
+  unlimited: boolean;
   totalRequests: number;
   createdAt: Date;
 }
@@ -19,6 +20,7 @@ const UserSchema = new Schema<IUser>({
   apiKey: { type: String, unique: true, default: () => "tb_" + crypto.randomBytes(20).toString("hex") },
   plan: { type: String, enum: ["free", "biweekly", "monthly", "lifetime"], default: "free" },
   credits: { type: Number, default: 100 },
+  unlimited: { type: Boolean, default: false },
   totalRequests: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
 });

@@ -8,6 +8,7 @@ import telegramRouter from "./telegram";
 import authRouter from "./auth";
 import paymentRouter from "./payment";
 import { metrics } from "../lib/metrics";
+import { requireApiKey } from "../middleware/apiAuth";
 
 const router: IRouter = Router();
 
@@ -29,6 +30,6 @@ router.use(healthRouter);
 router.use(endpointsRouter);
 router.use(visitorsRouter);
 router.use(telegramRouter);
-router.use(proxyRouter);
+router.use(requireApiKey, proxyRouter);
 
 export default router;

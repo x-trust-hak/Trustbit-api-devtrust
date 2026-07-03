@@ -1,7 +1,7 @@
 import { Link, useLocation, useLocation as useNav } from "wouter";
-import { Terminal, Activity, BookOpen, Layers, Menu, X, User } from "lucide-react";
+import { Terminal, Activity, BookOpen, Layers, Menu, X, User, LayoutDashboard, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
 export function Navbar() {
   const [location] = useLocation();
@@ -10,6 +10,11 @@ export function Navbar() {
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [flash, setFlash] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setIsLoggedIn(!!localStorage.getItem("tb_token"));
+  }, [location]);
 
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -65,12 +70,29 @@ export function Navbar() {
 
         {/* Right CTA */}
         <div className="flex items-center gap-2">
-          <Link href="/docs" className="hidden sm:inline-flex">
-            <Button size="sm" className="font-mono text-xs shadow-sm shadow-primary/20 gap-1.5">
-              <Terminal size={12} />
-              Get Started
-            </Button>
-          </Link>
+          {isLoggedIn ? (
+            <Link href="/dashboard" className="hidden sm:inline-flex">
+              <Button size="sm" variant="outline" className="font-mono text-xs gap-1.5">
+                <LayoutDashboard size={12} />
+                Dashboard
+              </Button>
+            </Link>
+          ) : (
+            <>
+              <Link href="/login" className="hidden sm:inline-flex">
+                <Button size="sm" variant="ghost" className="font-mono text-xs gap-1.5">
+                  <LogIn size={12} />
+                  Sign in
+                </Button>
+              </Link>
+              <Link href="/register" className="hidden sm:inline-flex">
+                <Button size="sm" className="font-mono text-xs shadow-sm shadow-primary/20 gap-1.5">
+                  <Terminal size={12} />
+                  Get API Key
+                </Button>
+              </Link>
+            </>
+          )}
           <button
             className="md:hidden flex items-center justify-center h-9 w-9 rounded-lg border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
             onClick={() => setMobileOpen((v) => !v)}
@@ -91,12 +113,27 @@ export function Navbar() {
               </div>
             </Link>
           ))}
-          <div className="pt-2 pb-1">
-            <Link href="/docs" onClick={() => setMobileOpen(false)}>
-              <Button className="w-full font-mono text-sm gap-2">
-                <Terminal size={13} /> Get Started
-              </Button>
-            </Link>
+          <div className="pt-2 pb-1 space-y-2">
+            {isLoggedIn ? (
+              <Link href="/dashboard" onClick={() => setMobileOpen(false)}>
+                <Button variant="outline" className="w-full font-mono text-sm gap-2">
+                  <LayoutDashboard size={13} /> Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/register" onClick={() => setMobileOpen(false)}>
+                  <Button className="w-full font-mono text-sm gap-2">
+                    <Terminal size={13} /> Get API Key
+                  </Button>
+                </Link>
+                <Link href="/login" onClick={() => setMobileOpen(false)}>
+                  <Button variant="outline" className="w-full font-mono text-sm gap-2">
+                    <LogIn size={13} /> Sign in
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </nav>
       </div>
