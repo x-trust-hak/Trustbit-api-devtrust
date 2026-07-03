@@ -3,6 +3,8 @@ import { Router, type IRouter } from "express";
 const router: IRouter = Router();
 
 const SOURCE_BASE = "https://prexzyapis.com";
+const ZSTLAB_SOURCE = "https://zstlab.cyou";
+const ZSTLAB_API_KEY = process.env.ZSTLAB_API_KEY;
 
 const BLOCKED_PREFIXES = ["/nsfw", "/home"];
 
@@ -32,14 +34,23 @@ router.use(async (req, res, next): Promise<void> => {
   }
 
   const qs = req.url.includes("?") ? req.url.slice(req.url.indexOf("?")) : "";
-  const targetUrl = `${SOURCE_BASE}${reqPath}${qs}`;
+
+  const isZstlab = reqPath === "/zst" || reqPath.startsWith("/zst/");
+  const targetUrl = isZstlab
+    ? `${ZSTLAB_SOURCE}/api${reqPath.slice(4)}${qs}`
+    : `${SOURCE_BASE}${reqPath}${qs}`;
+
+  const upstreamHeaders: Record<string, string> = {
+    "User-Agent": "TrustbitAPI/1.0",
+    Accept: "application/json, */*",
+  };
+  if (isZstlab && ZSTLAB_API_KEY) {
+    upstreamHeaders["x-api-key"] = ZSTLAB_API_KEY;
+  }
 
   try {
     const response = await fetch(targetUrl, {
-      headers: {
-        "User-Agent": "TrustbitAPI/1.0",
-        Accept: "application/json, */*",
-      },
+      headers: upstreamHeaders,
       signal: AbortSignal.timeout(30000),
     });
 
