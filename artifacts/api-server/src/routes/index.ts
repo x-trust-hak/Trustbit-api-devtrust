@@ -5,6 +5,7 @@ import proxyRouter from "./proxy";
 import adminRouter from "./admin";
 import visitorsRouter from "./visitors";
 import authRouter from "./auth";
+import animeRouter from "./anime";
 import paymentRouter from "./payment";
 import { metrics } from "../lib/metrics";
 import { requireApiKey } from "../middleware/apiAuth";
@@ -28,6 +29,7 @@ router.use(adminRouter);
 router.use(healthRouter);
 router.use(endpointsRouter);
 router.use(visitorsRouter);
+router.use(animeRouter);
 router.use(requireApiKey, proxyRouter);
 
 export default router;
