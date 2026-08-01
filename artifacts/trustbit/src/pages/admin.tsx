@@ -7,6 +7,7 @@ import {
   Activity, Server, Clock, TrendingUp, AlertTriangle, CheckCircle2,
   RefreshCw, Lock, Shield, Zap, Database, Eye, Radio, Users,
   CreditCard, XCircle, UserCheck, ChevronDown, ChevronUp,
+  Settings, Plus, Trash2, Save, Building2,
 } from "lucide-react";
 
 const ADMIN_KEY = "trustbit-admin-2026";
@@ -337,6 +338,228 @@ function UsersPanel({ adminKey }: { adminKey: string }) {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Settings Panel
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface PlanConfig {
+  id: string;
+  label: string;
+  duration: string;
+  credits: number;
+  price: number;
+  popular: boolean;
+  benefits: string[];
+}
+
+interface BankConfig {
+  accountName: string;
+  accountNumber: string;
+  bankName: string;
+}
+
+function SettingsPanel({ adminKey }: { adminKey: string }) {
+  const [plans, setPlans] = useState<PlanConfig[]>([]);
+  const [bank, setBank] = useState<BankConfig>({ accountName: "", accountNumber: "", bankName: "" });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/payment/plans");
+      if (res.ok) {
+        const d = await res.json() as { plans: PlanConfig[]; bank: BankConfig };
+        setPlans(d.plans ?? []);
+        setBank(d.bank ?? { accountName: "", accountNumber: "", bankName: "" });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await fetch(`/api/payment/settings?key=${adminKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plans, bank }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updatePlan = (idx: number, field: keyof PlanConfig, value: unknown) => {
+    setPlans((prev) => prev.map((p, i) => i === idx ? { ...p, [field]: value } : p));
+  };
+
+  const updateBenefit = (planIdx: number, bIdx: number, value: string) => {
+    setPlans((prev) => prev.map((p, i) => {
+      if (i !== planIdx) return p;
+      const benefits = [...p.benefits];
+      benefits[bIdx] = value;
+      return { ...p, benefits };
+    }));
+  };
+
+  const addBenefit = (planIdx: number) => {
+    setPlans((prev) => prev.map((p, i) => i === planIdx ? { ...p, benefits: [...p.benefits, ""] } : p));
+  };
+
+  const removeBenefit = (planIdx: number, bIdx: number) => {
+    setPlans((prev) => prev.map((p, i) => i === planIdx ? { ...p, benefits: p.benefits.filter((_, j) => j !== bIdx) } : p));
+  };
+
+  if (loading) {
+    return (
+      <div className="rounded-xl border border-border/40 bg-zinc-900 p-6 text-center text-muted-foreground text-sm">
+        Loading settings...
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-border/40 bg-zinc-900 overflow-hidden">
+      <div className="px-4 md:px-5 py-4 border-b border-border/30 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Settings className="h-4 w-4 text-primary" />
+          <h2 className="font-semibold text-sm">Plan & Payment Settings</h2>
+        </div>
+        <button
+          onClick={save}
+          disabled={saving}
+          className={"flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors " +
+            (saved ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-primary/10 border-primary/30 text-primary hover:bg-primary/20")}
+        >
+          {saving ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+          {saved ? "Saved!" : saving ? "Saving..." : "Save Changes"}
+        </button>
+      </div>
+
+      <div className="p-4 md:p-5 space-y-6">
+        {/* Bank details */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Building2 className="h-3.5 w-3.5 text-primary" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Payment Account</span>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-3">
+            {[
+              { key: "accountName" as const, label: "Account Name" },
+              { key: "accountNumber" as const, label: "Account Number" },
+              { key: "bankName" as const, label: "Bank Name" },
+            ].map(({ key, label }) => (
+              <div key={key}>
+                <label className="text-xs text-muted-foreground mb-1 block">{label}</label>
+                <input
+                  value={bank[key]}
+                  onChange={(e) => setBank((b) => ({ ...b, [key]: e.target.value }))}
+                  className="w-full h-9 px-3 text-sm rounded-lg bg-background border border-border/50 focus:outline-none focus:border-primary/50 font-mono"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Plan cards */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <CreditCard className="h-3.5 w-3.5 text-primary" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pricing Plans</span>
+          </div>
+          <div className="grid md:grid-cols-3 gap-4">
+            {plans.map((plan, idx) => (
+              <div key={plan.id} className="rounded-xl border border-border/30 bg-zinc-950 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono text-muted-foreground">{plan.id}</span>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <span className="text-xs text-muted-foreground">Popular</span>
+                    <button
+                      onClick={() => updatePlan(idx, "popular", !plan.popular)}
+                      className={"w-8 h-4 rounded-full transition-colors relative " + (plan.popular ? "bg-primary" : "bg-border")}
+                    >
+                      <span className={"absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-all " + (plan.popular ? "left-4" : "left-0.5")} />
+                    </button>
+                  </label>
+                </div>
+
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Label</label>
+                  <input
+                    value={plan.label}
+                    onChange={(e) => updatePlan(idx, "label", e.target.value)}
+                    className="w-full h-8 px-2.5 text-sm rounded-lg bg-background border border-border/50 focus:outline-none focus:border-primary/50"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Duration</label>
+                  <input
+                    value={plan.duration}
+                    onChange={(e) => updatePlan(idx, "duration", e.target.value)}
+                    className="w-full h-8 px-2.5 text-sm rounded-lg bg-background border border-border/50 focus:outline-none focus:border-primary/50"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Price (₦)</label>
+                    <input
+                      type="number"
+                      value={plan.price}
+                      onChange={(e) => updatePlan(idx, "price", Number(e.target.value))}
+                      className="w-full h-8 px-2.5 text-sm rounded-lg bg-background border border-border/50 focus:outline-none focus:border-primary/50 font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Credits</label>
+                    <input
+                      type="number"
+                      value={plan.credits}
+                      onChange={(e) => updatePlan(idx, "credits", Number(e.target.value))}
+                      className="w-full h-8 px-2.5 text-sm rounded-lg bg-background border border-border/50 focus:outline-none focus:border-primary/50 font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs text-muted-foreground">Benefits</label>
+                    <button onClick={() => addBenefit(idx)} className="text-xs text-primary hover:underline flex items-center gap-0.5">
+                      <Plus className="h-2.5 w-2.5" /> Add
+                    </button>
+                  </div>
+                  <div className="space-y-1.5">
+                    {plan.benefits.map((b, bIdx) => (
+                      <div key={bIdx} className="flex items-center gap-1.5">
+                        <input
+                          value={b}
+                          onChange={(e) => updateBenefit(idx, bIdx, e.target.value)}
+                          className="flex-1 h-7 px-2 text-xs rounded-md bg-background border border-border/50 focus:outline-none focus:border-primary/50"
+                        />
+                        <button onClick={() => removeBenefit(idx, bIdx)} className="text-red-400 hover:text-red-300 transition-colors shrink-0">
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Admin() {
   const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem("tb_admin") === ADMIN_KEY);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -439,6 +662,7 @@ export default function Admin() {
               <StatCard icon={CreditCard} label="Pending Payments" value={String((stats as unknown as Record<string, number>)["pendingPayments"] ?? 0)} sub="awaiting review" color="bg-yellow-500/10 text-yellow-400" />
               <StatCard icon={Users} label="Total Users" value={String((stats as unknown as Record<string, number>)["totalUsers"] ?? 0)} sub="registered accounts" color="bg-blue-500/10 text-blue-400" />
             </div>
+            <SettingsPanel adminKey={ADMIN_KEY} />
             <PaymentsPanel adminKey={ADMIN_KEY} />
             <UsersPanel adminKey={ADMIN_KEY} />
 

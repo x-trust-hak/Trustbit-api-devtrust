@@ -6,7 +6,7 @@ export interface IUser extends Document {
   email: string;
   passwordHash: string;
   apiKey: string;
-  plan: "free" | "biweekly" | "monthly" | "lifetime";
+  plan: "free" | "weekly" | "biweekly" | "monthly" | "lifetime";
   credits: number;
   unlimited: boolean;
   totalRequests: number;
@@ -18,7 +18,7 @@ const UserSchema = new Schema<IUser>({
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   passwordHash: { type: String, required: true },
   apiKey: { type: String, unique: true, default: () => "tb_" + crypto.randomBytes(20).toString("hex") },
-  plan: { type: String, enum: ["free", "biweekly", "monthly", "lifetime"], default: "free" },
+  plan: { type: String, enum: ["free", "weekly", "biweekly", "monthly", "lifetime"], default: "free" },
   credits: { type: Number, default: 100 },
   unlimited: { type: Boolean, default: false },
   totalRequests: { type: Number, default: 0 },

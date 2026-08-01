@@ -4,7 +4,6 @@ import endpointsRouter from "./endpoints";
 import proxyRouter from "./proxy";
 import adminRouter from "./admin";
 import visitorsRouter from "./visitors";
-import telegramRouter from "./telegram";
 import authRouter from "./auth";
 import paymentRouter from "./payment";
 import { metrics } from "../lib/metrics";
@@ -29,7 +28,6 @@ router.use(adminRouter);
 router.use(healthRouter);
 router.use(endpointsRouter);
 router.use(visitorsRouter);
-router.use(telegramRouter);
 router.use(requireApiKey, proxyRouter);
 
 export default router;

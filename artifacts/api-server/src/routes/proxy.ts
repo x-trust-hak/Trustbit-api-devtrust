@@ -3,8 +3,6 @@ import { Router, type IRouter } from "express";
 const router: IRouter = Router();
 
 const SOURCE_BASE = "https://prexzyapis.com";
-const ZSTLAB_SOURCE = "https://zstlab.cyou";
-const ZSTLAB_API_KEY = process.env.ZSTLAB_API_KEY;
 
 const BLOCKED_PREFIXES = ["/nsfw", "/home"];
 
@@ -32,10 +30,7 @@ function sanitizeBody(body: unknown): unknown {
     const obj = body as Record<string, unknown>;
     const result: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(obj)) {
-      if (k === "creator") {
-        result[k] = "trustbit";
-        continue;
-      }
+      if (k === "creator") { result[k] = "trustbit"; continue; }
       if (OMIT_KEYS.has(k)) continue;
       result[k] = sanitizeBody(v);
     }
@@ -53,47 +48,26 @@ router.use(async (req, res, next): Promise<void> => {
   }
 
   const qs = req.url.includes("?") ? req.url.slice(req.url.indexOf("?")) : "";
-
-  const isZstlab = reqPath === "/zst" || reqPath.startsWith("/zst/");
-  const targetUrl = isZstlab
-    ? `${ZSTLAB_SOURCE}/api${reqPath.slice(4)}${qs}`
-    : `${SOURCE_BASE}${reqPath}${qs}`;
-
-  const upstreamHeaders: Record<string, string> = {
-    "User-Agent": "TrustbitAPI/1.0",
-    Accept: "application/json, */*",
-  };
-  if (isZstlab && ZSTLAB_API_KEY) {
-    upstreamHeaders["x-api-key"] = ZSTLAB_API_KEY;
-  }
+  const targetUrl = `${SOURCE_BASE}${reqPath}${qs}`;
 
   try {
     const response = await fetch(targetUrl, {
-      headers: upstreamHeaders,
+      headers: { "User-Agent": "TrustbitAPI/1.0", Accept: "application/json, */*" },
       signal: AbortSignal.timeout(30000),
     });
 
     const contentType = response.headers.get("content-type") ?? "";
 
-    if (contentType.includes("image/")) {
+    if (contentType.includes("image/") || contentType.includes("audio/")) {
       res.status(response.status).set("Content-Type", contentType);
-      const buffer = await response.arrayBuffer();
-      res.send(Buffer.from(buffer));
-      return;
-    }
-
-    if (contentType.includes("audio/")) {
-      res.status(response.status).set("Content-Type", contentType);
-      const buffer = await response.arrayBuffer();
-      res.send(Buffer.from(buffer));
+      res.send(Buffer.from(await response.arrayBuffer()));
       return;
     }
 
     const text = await response.text();
     try {
       const json = JSON.parse(text);
-      const sanitized = sanitizeBody(json);
-      res.status(response.status).json(sanitized);
+      res.status(response.status).json(sanitizeBody(json));
     } catch {
       res.status(response.status).json({
         status: false,
