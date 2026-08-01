@@ -4,6 +4,7 @@ import { useListEndpoints, useListCategories } from "@workspace/api-client-react
 import {
   Search, Copy, Check, Terminal, Zap, Send, ChevronDown, ChevronUp,
   Image as ImageIcon, Volume2, Loader2, XCircle, Clock, KeyRound, LogIn,
+  BookOpen,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -69,6 +70,132 @@ function JsonRenderer({ data }: { data: unknown }) {
     </pre>
   );
 }
+
+function QuickStartSection({ examples, baseUrl }: {
+  examples: { lang: string; code: string }[];
+  baseUrl: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [activeLang, setActiveLang] = useState(0);
+  const [copied, setCopied] = useState(false);
+
+  const copy = () => {
+    navigator.clipboard.writeText(examples[activeLang]?.code ?? "");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="mb-6 rounded-xl border border-primary/20 bg-card/30 overflow-hidden">
+      {/* Header — always visible */}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-muted/30 transition-colors text-left"
+      >
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 shrink-0">
+            <BookOpen className="h-3.5 w-3.5 text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold">How to use the API</p>
+            <p className="text-xs text-muted-foreground">Quick start with code examples and a sample key</p>
+          </div>
+        </div>
+        {open ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />}
+      </button>
+
+      {/* Expandable body */}
+      {open && (
+        <div className="border-t border-primary/10 p-4 space-y-4">
+          {/* Step 1 */}
+          <div className="flex gap-3">
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold mt-0.5">1</div>
+            <div>
+              <p className="text-sm font-semibold mb-0.5">Get your API key</p>
+              <p className="text-xs text-muted-foreground mb-2">
+                Create a free account to get your personal key — it starts with <code className="font-mono text-primary">tb_</code>
+              </p>
+              <div className="flex gap-2">
+                <Link href="/register">
+                  <button className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors">
+                    <Terminal className="h-3 w-3" /> Create free account
+                  </button>
+                </Link>
+                <Link href="/login">
+                  <button className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors">
+                    <LogIn className="h-3 w-3" /> Sign in
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Step 2 */}
+          <div className="flex gap-3">
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold mt-0.5">2</div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold mb-0.5">Pass your key with every request</p>
+              <p className="text-xs text-muted-foreground mb-3">
+                Use the <code className="font-mono text-primary">x-api-key</code> header <span className="text-muted-foreground/60">(recommended)</span> or the <code className="font-mono text-primary">apikey</code> query parameter.
+                Replace the sample key below with your real one.
+              </p>
+
+              {/* Language tabs */}
+              <div className="flex gap-1 mb-0 flex-wrap">
+                {examples.map((ex, i) => (
+                  <button
+                    key={ex.lang}
+                    onClick={() => setActiveLang(i)}
+                    className={"text-xs px-2.5 py-1 rounded-t-md border border-b-0 transition-colors font-mono " +
+                      (activeLang === i
+                        ? "bg-zinc-900 border-border/50 text-foreground"
+                        : "border-transparent text-muted-foreground hover:text-foreground")}
+                  >
+                    {ex.lang}
+                  </button>
+                ))}
+              </div>
+
+              {/* Code block */}
+              <div className="relative rounded-b-lg rounded-tr-lg bg-zinc-900 border border-border/50 overflow-hidden">
+                <button
+                  onClick={copy}
+                  className="absolute top-2.5 right-2.5 flex items-center gap-1 text-xs px-2 py-1 rounded-md border border-border/40 bg-zinc-800 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {copied ? <Check className="h-3 w-3 text-green-400" /> : <Copy className="h-3 w-3" />}
+                  {copied ? "Copied!" : "Copy"}
+                </button>
+                <pre className="p-4 pr-16 text-xs font-mono leading-relaxed text-green-400/90 overflow-x-auto whitespace-pre">
+                  {examples[activeLang]?.code}
+                </pre>
+              </div>
+            </div>
+          </div>
+
+          {/* Step 3 */}
+          <div className="flex gap-3">
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold mt-0.5">3</div>
+            <div>
+              <p className="text-sm font-semibold mb-0.5">Browse &amp; test endpoints below</p>
+              <p className="text-xs text-muted-foreground">
+                Every endpoint has a <span className="text-primary font-medium">Try It</span> button — hit it while signed in to test live with your key. Use the search bar and category filters to find what you need.
+              </p>
+            </div>
+          </div>
+
+          {/* Tip */}
+          <div className="rounded-lg bg-yellow-500/5 border border-yellow-500/15 px-3 py-2.5 text-xs text-muted-foreground">
+            <span className="text-yellow-400 font-semibold">💡 Tip: </span>
+            The sample key above (<code className="font-mono text-primary/80">tb_a1b2c3...</code>) is just for illustration — it won't work. Sign up to get a real key with 100 free credits.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _baseUrlRef = typeof window !== "undefined" ? window.location.origin : "";
 
 function TryItPanel({ path }: { path: string }) {
   const params = useMemo(() => parseParams(path), [path]);
@@ -212,6 +339,48 @@ export default function Docs() {
     "w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors " +
     (active ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground");
 
+  const FAKE_KEY = "tb_a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2";
+
+  const quickStartExamples = [
+    {
+      lang: "JavaScript",
+      code: `const apiKey = "${FAKE_KEY}";
+
+const res = await fetch(
+  \`${BASE_URL}/api/ai/aichat?prompt=Hello\`,
+  { headers: { "x-api-key": apiKey } }
+);
+
+const data = await res.json();
+console.log(data);`,
+    },
+    {
+      lang: "Python",
+      code: `import requests
+
+API_KEY = "${FAKE_KEY}"
+
+res = requests.get(
+    "${BASE_URL}/api/ai/aichat",
+    params={"prompt": "Hello"},
+    headers={"x-api-key": API_KEY}
+)
+
+print(res.json())`,
+    },
+    {
+      lang: "cURL",
+      code: `curl "${BASE_URL}/api/ai/aichat?prompt=Hello" \\
+  -H "x-api-key: ${FAKE_KEY}"`,
+    },
+    {
+      lang: "Query Param",
+      code: `# You can also pass your key as a query parameter:
+
+${BASE_URL}/api/ai/aichat?prompt=Hello&apikey=${FAKE_KEY}`,
+    },
+  ];
+
   return (
     <div className="flex-1 flex flex-col md:flex-row max-w-7xl mx-auto w-full">
       <aside className="w-full md:w-64 lg:w-72 shrink-0 border-r border-border/40 bg-card/30 md:block hidden h-[calc(100vh-4rem)] sticky top-16">
@@ -240,10 +409,14 @@ export default function Docs() {
         <div className="max-w-4xl">
           <div className="mb-8">
             <h1 className="text-3xl font-bold tracking-tight mb-2">API Reference</h1>
-            <p className="text-muted-foreground text-sm mb-4">
+            <p className="text-muted-foreground text-sm mb-5">
               Base URL:{" "}
               <code className="ml-1 px-2 py-0.5 bg-muted rounded text-primary font-mono border border-primary/20">{BASE_URL}/api</code>
             </p>
+
+            {/* ── Getting Started ── */}
+            <QuickStartSection examples={quickStartExamples} baseUrl={BASE_URL} />
+
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input type="search" data-testid="input-search-endpoints" placeholder="Search endpoints by name, description, or path..." className="w-full pl-10 h-12 bg-card border-border/50 text-base" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
