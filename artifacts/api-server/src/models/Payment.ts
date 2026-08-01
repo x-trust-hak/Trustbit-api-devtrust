@@ -30,9 +30,8 @@ const PaymentSchema = new Schema<IPayment>({
   updatedAt: { type: Date, default: Date.now },
 });
 
-PaymentSchema.pre("save", function (next) {
+PaymentSchema.pre("save", function () {
   this.updatedAt = new Date();
-  next();
 });
 
 export const Payment = mongoose.models["Payment"] as mongoose.Model<IPayment> | undefined

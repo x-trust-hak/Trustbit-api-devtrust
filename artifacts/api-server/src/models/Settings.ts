@@ -42,9 +42,8 @@ const SettingsSchema = new Schema<ISettings>({
   updatedAt: { type: Date, default: Date.now },
 });
 
-SettingsSchema.pre("save", function (next) {
+SettingsSchema.pre("save", function () {
   this.updatedAt = new Date();
-  next();
 });
 
 export const Settings = mongoose.models["Settings"] as mongoose.Model<ISettings> | undefined

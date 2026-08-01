@@ -1,5 +1,5 @@
 import { Link, useLocation, useLocation as useNav } from "wouter";
-import { Terminal, Activity, BookOpen, Layers, Menu, X, User, LayoutDashboard, LogIn } from "lucide-react";
+import { Terminal, Activity, BookOpen, Layers, Menu, X, User, LayoutDashboard, LogIn, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRef, useState, useEffect } from "react";
 
@@ -71,12 +71,20 @@ export function Navbar() {
         {/* Right CTA */}
         <div className="flex items-center gap-2">
           {isLoggedIn ? (
-            <Link href="/dashboard" className="hidden sm:inline-flex">
-              <Button size="sm" variant="outline" className="font-mono text-xs gap-1.5">
-                <LayoutDashboard size={12} />
-                Dashboard
-              </Button>
-            </Link>
+            <div className="hidden sm:flex items-center gap-2">
+              <Link href="/upgrade">
+                <Button size="sm" className="font-mono text-xs gap-1.5 shadow-sm shadow-primary/20">
+                  <CreditCard size={12} />
+                  Upgrade
+                </Button>
+              </Link>
+              <Link href="/dashboard">
+                <Button size="sm" variant="outline" className="font-mono text-xs gap-1.5">
+                  <LayoutDashboard size={12} />
+                  Dashboard
+                </Button>
+              </Link>
+            </div>
           ) : (
             <>
               <Link href="/login" className="hidden sm:inline-flex">
@@ -115,11 +123,18 @@ export function Navbar() {
           ))}
           <div className="pt-2 pb-1 space-y-2">
             {isLoggedIn ? (
-              <Link href="/dashboard" onClick={() => setMobileOpen(false)}>
-                <Button variant="outline" className="w-full font-mono text-sm gap-2">
-                  <LayoutDashboard size={13} /> Dashboard
-                </Button>
-              </Link>
+              <>
+                <Link href="/upgrade" onClick={() => setMobileOpen(false)}>
+                  <Button className="w-full font-mono text-sm gap-2">
+                    <CreditCard size={13} /> Upgrade Plan
+                  </Button>
+                </Link>
+                <Link href="/dashboard" onClick={() => setMobileOpen(false)}>
+                  <Button variant="outline" className="w-full font-mono text-sm gap-2">
+                    <LayoutDashboard size={13} /> Dashboard
+                  </Button>
+                </Link>
+              </>
             ) : (
               <>
                 <Link href="/register" onClick={() => setMobileOpen(false)}>
