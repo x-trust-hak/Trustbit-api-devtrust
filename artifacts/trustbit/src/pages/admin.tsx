@@ -7,7 +7,7 @@ import {
   Activity, Server, Clock, TrendingUp, AlertTriangle, CheckCircle2,
   RefreshCw, Lock, Shield, Zap, Database, Eye, Radio, Users,
   CreditCard, XCircle, UserCheck, ChevronDown, ChevronUp,
-  Settings, Plus, Trash2, Save, Building2,
+  Settings, Plus, Trash2, Save, Building2, UserPlus,
 } from "lucide-react";
 
 const ADMIN_KEY = "trustbit-admin-2026";
@@ -43,6 +43,14 @@ interface VisitorStats {
   dailyChart: { date: string; visitors: number }[];
 }
 
+interface SignupStats {
+  todaySignups: number;
+  weekSignups: number;
+  monthSignups: number;
+  totalUsers: number;
+  signupChart: { date: string; signups: number }[];
+}
+
 interface Stats {
   startedAt: number;
   uptime: number;
@@ -55,6 +63,7 @@ interface Stats {
   topEndpoints: { path: string; count: number; errors: number; avgMs: number }[];
   recentRequests: { id: number; method: string; path: string; status: number; ms: number; bytes: number; ts: number }[];
   visitors: VisitorStats;
+  signupStats: SignupStats | null;
 }
 
 function StatCard({ icon: Icon, label, value, sub, color }: {
@@ -657,11 +666,57 @@ export default function Admin() {
           </div>
         ) : (
           <>
-            {/* Payments Panel */}
+            {/* Top KPI row */}
             <div className="grid grid-cols-2 gap-3">
               <StatCard icon={CreditCard} label="Pending Payments" value={String((stats as unknown as Record<string, number>)["pendingPayments"] ?? 0)} sub="awaiting review" color="bg-yellow-500/10 text-yellow-400" />
               <StatCard icon={Users} label="Total Users" value={String((stats as unknown as Record<string, number>)["totalUsers"] ?? 0)} sub="registered accounts" color="bg-blue-500/10 text-blue-400" />
             </div>
+
+            {/* ── User Signups Panel ── */}
+            {stats.signupStats && (
+              <div className="rounded-xl border border-border/40 bg-zinc-900 p-4 space-y-4">
+                <div className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4 text-emerald-400" />
+                  <h2 className="font-semibold text-sm">New Signups</h2>
+                  <span className="text-xs text-muted-foreground">(account registrations)</span>
+                </div>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                  <StatCard icon={UserPlus} label="Today" value={formatNum(stats.signupStats.todaySignups)}
+                    sub="new accounts" color="bg-emerald-500/10 text-emerald-400" />
+                  <StatCard icon={TrendingUp} label="This Week" value={formatNum(stats.signupStats.weekSignups)}
+                    sub="last 7 days" color="bg-blue-500/10 text-blue-400" />
+                  <StatCard icon={Activity} label="This Month" value={formatNum(stats.signupStats.monthSignups)}
+                    sub="last 30 days" color="bg-purple-500/10 text-purple-400" />
+                  <StatCard icon={Users} label="All Time" value={formatNum(stats.signupStats.totalUsers)}
+                    sub="total registered" color="bg-primary/10 text-primary" />
+                </div>
+                {stats.signupStats.signupChart.some((d) => d.signups > 0) ? (
+                  <ResponsiveContainer width="100%" height={160}>
+                    <AreaChart data={stats.signupStats.signupChart} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+                      <defs>
+                        <linearGradient id="signupGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%"  stopColor="#10b981" stopOpacity={0.25} />
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
+                      <XAxis dataKey="date" tick={{ fontSize: 9, fill: "#555" }} tickLine={false} axisLine={false} interval={4} />
+                      <YAxis tick={{ fontSize: 9, fill: "#555" }} tickLine={false} axisLine={false} width={24} allowDecimals={false} />
+                      <Tooltip contentStyle={{ background: "#0a0a0a", border: "1px solid #333", borderRadius: 8, fontSize: 12 }}
+                        labelStyle={{ color: "#aaa" }} />
+                      <Area type="monotone" dataKey="signups" stroke="#10b981" strokeWidth={2}
+                        fill="url(#signupGrad)" name="Signups" dot={false} activeDot={{ r: 4, fill: "#10b981" }} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-20 text-muted-foreground gap-2">
+                    <UserPlus className="h-4 w-4 opacity-30" />
+                    <p className="text-sm">Signup chart will appear as users register</p>
+                  </div>
+                )}
+              </div>
+            )}
+
             <SettingsPanel adminKey={ADMIN_KEY} />
             <PaymentsPanel adminKey={ADMIN_KEY} />
             <UsersPanel adminKey={ADMIN_KEY} />

@@ -1,5 +1,9 @@
 import { Link } from "wouter";
-import { ArrowRight, Terminal, Zap, Layers, Code, Shield, Activity, Globe, Cpu, Music, Image, Download, Search, MessageSquare, Bot, BookOpen } from "lucide-react";
+import {
+  ArrowRight, Terminal, Zap, Layers, Code, Shield, Activity, Globe, Cpu,
+  Music, Image, Download, Search, MessageSquare, Bot, BookOpen, Tv,
+  Sparkles, Database, Radio,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetApiStatus, useListCategories } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,48 +12,146 @@ import { useEffect, useRef, useState } from "react";
 const DYNAMIC_BASE = typeof window !== "undefined" ? window.location.origin : "https://trustbit.app";
 
 const CATEGORY_PILLS = [
-  "AI Chat", "Anime", "Media Fetch", "Text to Speech", "Profile Lookup",
-  "Image Tools", "Search Engine", "Translation", "Weather", "News",
-  "Entertainment", "Social Tools", "Utilities", "Math", "QR Code",
+  "AI Chat", "Anime Stream", "Media Fetch", "Text to Speech", "Profile Lookup",
+  "Image Tools", "Search Engine", "Translation", "Voice Synth", "News",
+  "Entertainment", "Social Tools", "Dev Tools", "Math", "QR Code",
   "Currency", "Lyrics", "Quotes", "Facts",
 ];
 
 const FEATURES = [
-  { icon: Zap, title: "Instant Setup", desc: "Sign up in seconds, grab your key, and start calling endpoints." },
-  { icon: Layers, title: "19 Categories", desc: "AI, TTS, anime, media, tools and more under one roof." },
-  { icon: Shield, title: "Always On", desc: "99.9% uptime backed by redundant global infrastructure." },
-  { icon: Code, title: "Live Tester", desc: "Try every endpoint directly in the browser once signed in." },
-  { icon: Globe, title: "Fair Usage", desc: "Free credits to start, with rate limits to keep things fast for everyone." },
-  { icon: Cpu, title: "Blazing Fast", desc: "Edge-optimized proxy. Sub-50ms median response." },
+  { icon: Zap,      title: "Instant Setup",   desc: "Sign up in seconds, grab your key, and start calling endpoints immediately." },
+  { icon: Layers,   title: "20 Categories",   desc: "AI, TTS, anime streaming, media tools, and more under one roof." },
+  { icon: Shield,   title: "Always On",       desc: "99.9% uptime backed by redundant global infrastructure." },
+  { icon: Code,     title: "Live Tester",     desc: "Try every endpoint directly in the browser — no Postman needed." },
+  { icon: Globe,    title: "Fair Usage",      desc: "100 free credits on signup. Rate-limited to keep the platform fast for everyone." },
+  { icon: Cpu,      title: "Blazing Fast",    desc: "Edge-optimized proxy. Sub-50 ms median response time." },
 ];
 
 const CODE_EXAMPLES = [
   {
     label: "AI Chat",
-    code: `const res = await fetch(\n  \`${DYNAMIC_BASE}/api/ai/aichat\n    ?prompt=hello\`\n);\nconst { result } = await res.json();\nconsole.log(result);`,
+    badge: "AI",
+    badgeColor: "text-violet-400 bg-violet-400/10 border-violet-400/20",
+    code: `const res = await fetch(
+  \`${DYNAMIC_BASE}/api/ai/aichat?prompt=hello\`,
+  { headers: { "x-api-key": "tb_your_key" } }
+);
+const { result } = await res.json();
+console.log(result);`,
+    response: `{ "status": true, "result": "Hello! How can I help you today?" }`,
   },
   {
     label: "TTS",
-    code: `const res = await fetch(\n  \`${DYNAMIC_BASE}/api/tts/tts\n    ?text=Hello+World\n    &voice=en-US\`\n);\n// Returns audio/mpeg\nconst audio = await res.blob();`,
+    badge: "Voice",
+    badgeColor: "text-sky-400 bg-sky-400/10 border-sky-400/20",
+    code: `const res = await fetch(
+  \`${DYNAMIC_BASE}/api/tts/tts?text=Hello+World&voice=en-US\`,
+  { headers: { "x-api-key": "tb_your_key" } }
+);
+// Returns audio/mpeg stream
+const audioBlob = await res.blob();`,
+    response: `// Content-Type: audio/mpeg\n// Binary audio stream (mp3)`,
   },
   {
     label: "Download",
-    code: `const res = await fetch(\n  \`${DYNAMIC_BASE}/api/downloader/ytmp3\n    ?url=https://youtube.com/...\`\n);\nconst { download_url } = await res.json();`,
+    badge: "Media",
+    badgeColor: "text-orange-400 bg-orange-400/10 border-orange-400/20",
+    code: `const res = await fetch(
+  \`${DYNAMIC_BASE}/api/downloader/ytmp3\`,
+  {
+    headers: { "x-api-key": "tb_your_key" },
+    // Add ?url=https://youtube.com/...
+  }
+);
+const { download_url } = await res.json();`,
+    response: `{ "status": true, "download_url": "https://cdn.../audio.mp3" }`,
+  },
+  {
+    label: "Anime",
+    badge: "Stream",
+    badgeColor: "text-pink-400 bg-pink-400/10 border-pink-400/20",
+    code: `// 1. Search anime by name
+const search = await fetch(
+  \`${DYNAMIC_BASE}/api/media/search?q=naruto\`,
+  { headers: { "x-api-key": "tb_your_key" } }
+);
+const { results } = await search.json();
+
+// 2. Get episode stream link
+const stream = await fetch(
+  \`${DYNAMIC_BASE}/api/media/stream?url=\${results[0].url}\`,
+  { headers: { "x-api-key": "tb_your_key" } }
+);`,
+    response: `{ "status": true, "total": 2,
+  "results": [{ "title": "Naruto", "url": "..." }] }`,
   },
 ];
 
-const CATS = [
-  { icon: Bot, name: "AI Suite" }, { icon: Image, name: "Anime Hub" },
-  { icon: Download, name: "Media Fetch" }, { icon: Music, name: "Voice Synth" },
-  { icon: Search, name: "Profile Lookup" }, { icon: Layers, name: "Image Studio" },
-  { icon: Globe, name: "Search Engine" }, { icon: MessageSquare, name: "Dev Tools" },
-  { icon: Activity, name: "Web Capture" }, { icon: Zap, name: "Discovery" },
-  { icon: Code, name: "Font Forge" }, { icon: Cpu, name: "GameZone" },
-  { icon: Shield, name: "CinemaDB" }, { icon: Terminal, name: "Link Shrink" },
-  { icon: Globe, name: "Audio Vault" }, { icon: Music, name: "Text FX" },
-  { icon: MessageSquare, name: "Live Sports" }, { icon: Zap, name: "SMS Inbox" },
-  { icon: Image, name: "AI Imaging" },
+interface CatDef { icon: React.ElementType; name: string; color: string }
+const CATS: CatDef[] = [
+  { icon: Bot,          name: "AI Suite",       color: "text-violet-400 bg-violet-400/10 group-hover:bg-violet-400/20" },
+  { icon: Music,        name: "Voice Synth",    color: "text-sky-400   bg-sky-400/10   group-hover:bg-sky-400/20" },
+  { icon: Download,     name: "Media Fetch",    color: "text-orange-400 bg-orange-400/10 group-hover:bg-orange-400/20" },
+  { icon: Tv,           name: "Anime Stream",   color: "text-pink-400  bg-pink-400/10  group-hover:bg-pink-400/20" },
+  { icon: Image,        name: "Anime Hub",      color: "text-rose-400  bg-rose-400/10  group-hover:bg-rose-400/20" },
+  { icon: Code,         name: "Dev Tools",      color: "text-emerald-400 bg-emerald-400/10 group-hover:bg-emerald-400/20" },
+  { icon: Layers,       name: "Image Studio",   color: "text-cyan-400  bg-cyan-400/10  group-hover:bg-cyan-400/20" },
+  { icon: Search,       name: "Search Engine",  color: "text-yellow-400 bg-yellow-400/10 group-hover:bg-yellow-400/20" },
+  { icon: Globe,        name: "Profile Lookup", color: "text-blue-400  bg-blue-400/10  group-hover:bg-blue-400/20" },
+  { icon: Shield,       name: "CinemaDB",       color: "text-red-400   bg-red-400/10   group-hover:bg-red-400/20" },
+  { icon: Cpu,          name: "GameZone",       color: "text-lime-400  bg-lime-400/10  group-hover:bg-lime-400/20" },
+  { icon: Zap,          name: "Discovery",      color: "text-amber-400 bg-amber-400/10 group-hover:bg-amber-400/20" },
+  { icon: Radio,        name: "Audio Vault",    color: "text-indigo-400 bg-indigo-400/10 group-hover:bg-indigo-400/20" },
+  { icon: Sparkles,     name: "Text FX",        color: "text-fuchsia-400 bg-fuchsia-400/10 group-hover:bg-fuchsia-400/20" },
+  { icon: Terminal,     name: "Font Forge",     color: "text-teal-400  bg-teal-400/10  group-hover:bg-teal-400/20" },
+  { icon: MessageSquare,name: "Link Shrink",    color: "text-green-400 bg-green-400/10 group-hover:bg-green-400/20" },
+  { icon: Activity,     name: "Web Capture",    color: "text-purple-400 bg-purple-400/10 group-hover:bg-purple-400/20" },
+  { icon: Database,     name: "SMS Inbox",      color: "text-slate-400 bg-slate-400/10 group-hover:bg-slate-400/20" },
+  { icon: Globe,        name: "Live Sports",    color: "text-green-400 bg-green-400/10 group-hover:bg-green-400/20" },
+  { icon: Sparkles,     name: "AI Imaging",     color: "text-violet-300 bg-violet-300/10 group-hover:bg-violet-300/20" },
 ];
+
+// ─── Live activity strip ───────────────────────────────────────────────────────
+const LIVE_EVENTS = [
+  { path: "/api/ai/aichat",      ms: 31,  status: 200 },
+  { path: "/api/media/search",   ms: 214, status: 200 },
+  { path: "/api/tts/tts",        ms: 88,  status: 200 },
+  { path: "/api/downloader/ytmp3", ms: 143, status: 200 },
+  { path: "/api/stalk/igstalk",  ms: 57,  status: 200 },
+  { path: "/api/media/stream",   ms: 310, status: 200 },
+  { path: "/api/ai/aichat",      ms: 44,  status: 200 },
+  { path: "/api/tools/geoip",    ms: 29,  status: 200 },
+];
+
+function LiveActivity() {
+  const [idx, setIdx] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setIdx((i) => (i + 1) % LIVE_EVENTS.length);
+        setVisible(true);
+      }, 300);
+    }, 2200);
+    return () => clearInterval(t);
+  }, []);
+
+  const ev = LIVE_EVENTS[idx];
+  return (
+    <div className={
+      "inline-flex items-center gap-2.5 rounded-full border border-green-500/20 bg-green-500/5 px-4 py-2 text-xs font-mono transition-opacity duration-300 " +
+      (visible ? "opacity-100" : "opacity-0")
+    }>
+      <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse shrink-0" />
+      <span className="text-green-400/60">LIVE</span>
+      <span className="text-muted-foreground truncate max-w-[180px] sm:max-w-xs">{ev.path}</span>
+      <span className="text-green-400 font-semibold shrink-0">{ev.status}</span>
+      <span className="text-muted-foreground/50 shrink-0">{ev.ms}ms</span>
+    </div>
+  );
+}
 
 function Ticker() {
   return (
@@ -72,7 +174,6 @@ function CountUp({ target }: { target: number | string }) {
   const [val, setVal] = useState(0);
   const started = useRef(false);
   const ref = useRef<HTMLSpanElement>(null);
-
   useEffect(() => {
     if (typeof target !== "number" || started.current) return;
     const observer = new IntersectionObserver(([entry]) => {
@@ -91,7 +192,6 @@ function CountUp({ target }: { target: number | string }) {
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
   }, [target]);
-
   if (typeof target === "string") return <span>{target}</span>;
   return <span ref={ref}>{val.toLocaleString()}</span>;
 }
@@ -100,9 +200,11 @@ function highlight(code: string) {
   return code
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     .replace(/(`[^`]*`)/g, '<span class="text-green-400">$1</span>')
-    .replace(/\b(const|await|async|let|var)\b/g, '<span class="text-purple-400">$1</span>')
+    .replace(/\b(const|await|async|let|var|\/\/)\b/g, '<span class="text-purple-400">$1</span>')
+    .replace(/(\/\/[^\n]*)/g, '<span class="text-zinc-500 italic">$1</span>')
     .replace(/\b(fetch|json|blob|log)\b/g, '<span class="text-blue-400">$1</span>')
-    .replace(/\b(res|data|audio|result)\b/g, '<span class="text-sky-300">$1</span>');
+    .replace(/\b(res|data|audio|result|search|stream)\b/g, '<span class="text-sky-300">$1</span>')
+    .replace(/("x-api-key"|"tb_your_key")/g, '<span class="text-amber-400">$1</span>');
 }
 
 export default function Home() {
@@ -119,34 +221,36 @@ export default function Home() {
       {/* ── HERO ── */}
       <section className="relative overflow-hidden pt-16 pb-0 md:pt-28">
         {/* Grid bg */}
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(0,255,204,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,204,0.035)_1px,transparent_1px)] bg-[size:40px_40px] sm:bg-[size:48px_48px]" />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(0,255,204,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,204,0.03)_1px,transparent_1px)] bg-[size:40px_40px] sm:bg-[size:48px_48px]" />
         {/* Orbs */}
-        <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 h-64 w-64 sm:h-[400px] sm:w-[500px] md:h-[500px] md:w-[700px] rounded-full bg-primary/10 blur-[80px] sm:blur-[120px]" />
-        <div className="pointer-events-none absolute top-32 -left-20 h-40 w-40 md:h-64 md:w-64 rounded-full bg-blue-500/8 blur-[60px] md:blur-[80px]" />
+        <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 h-64 w-64 sm:h-[500px] sm:w-[700px] rounded-full bg-primary/8 blur-[100px] sm:blur-[140px]" />
+        <div className="pointer-events-none absolute top-32 -left-20 h-40 w-40 md:h-80 md:w-80 rounded-full bg-blue-500/6 blur-[80px]" />
+        <div className="pointer-events-none absolute top-16 -right-10 h-32 w-32 md:h-64 md:w-64 rounded-full bg-violet-500/6 blur-[80px]" />
 
         <div className="container mx-auto px-4 sm:px-6 relative z-10">
           <div className="max-w-5xl mx-auto text-center">
-            {/* Badge */}
-            <div className="inline-flex items-center rounded-full border border-primary/25 bg-primary/8 px-3.5 py-1.5 text-xs sm:text-sm font-mono text-primary mb-7 md:mb-10 backdrop-blur-sm">
+
+            {/* Version badge */}
+            <div className="inline-flex items-center rounded-full border border-primary/25 bg-primary/8 px-3.5 py-1.5 text-xs sm:text-sm font-mono text-primary mb-5 backdrop-blur-sm">
               <span className="mr-2 h-2 w-2 rounded-full bg-primary inline-block animate-pulse" />
-              v{version} · Free to start · Sign up for your API key
+              v{version} · Free to start · 100 credits included
             </div>
 
-            {/* Headline — scales down for small phones */}
-            <h1 className="text-[2.6rem] leading-[0.92] sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-5 md:mb-6">
+            {/* Headline */}
+            <h1 className="text-[2.6rem] leading-[0.92] sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-5">
               <span className="block text-foreground">One API.</span>
               <span className="block text-transparent bg-clip-text bg-gradient-to-r from-primary via-emerald-300 to-blue-400">
                 Everything.
               </span>
             </h1>
 
-            <p className="text-sm sm:text-base md:text-xl text-muted-foreground mb-8 md:mb-10 max-w-xl mx-auto leading-relaxed px-2">
-              545+ endpoints across AI, anime, media, voice synthesis, and more.
-              One base URL. Create a free account and start building in seconds.
+            <p className="text-sm sm:text-base md:text-xl text-muted-foreground mb-8 max-w-xl mx-auto leading-relaxed px-2">
+              {totalEndpoints}+ endpoints across AI, anime streaming, media, voice synthesis, and more.
+              One URL. Infinite possibilities.
             </p>
 
-            {/* CTA buttons */}
-            <div className="flex flex-col xs:flex-row items-center justify-center gap-3 px-4 sm:px-0">
+            {/* CTA */}
+            <div className="flex flex-col xs:flex-row items-center justify-center gap-3 px-4 sm:px-0 mb-8">
               <Link href="/register" className="w-full sm:w-auto">
                 <Button size="lg" className="w-full sm:w-auto h-12 px-6 sm:px-8 font-mono text-sm group bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
                   <Terminal className="mr-2 h-4 w-4 shrink-0" />
@@ -160,6 +264,11 @@ export default function Home() {
                   Browse Docs
                 </Button>
               </Link>
+            </div>
+
+            {/* Live activity */}
+            <div className="flex justify-center">
+              <LiveActivity />
             </div>
           </div>
         </div>
@@ -175,10 +284,10 @@ export default function Home() {
         <div className="container mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border/30 rounded-xl sm:rounded-2xl overflow-hidden border border-border/30">
             {[
-              { label: "Endpoints", value: isLoadingStatus ? null : totalEndpoints, suffix: "+" },
-              { label: "Categories", value: isLoadingCategories ? null : (categoriesData?.total ?? 19), suffix: "" },
-              { label: "Uptime", value: "99.9", suffix: "%" },
-              { label: "Avg Latency", value: "<50", suffix: "ms" },
+              { label: "Endpoints",   value: isLoadingStatus      ? null : totalEndpoints,              suffix: "+" },
+              { label: "Categories",  value: isLoadingCategories  ? null : (categoriesData?.total ?? 20), suffix: "" },
+              { label: "Uptime",      value: "99.9",  suffix: "%" },
+              { label: "Avg Latency", value: "<50",   suffix: "ms" },
             ].map((stat, i) => (
               <div key={i} className="bg-background/80 px-3 sm:px-6 py-6 sm:py-8 text-center group hover:bg-card/80 transition-colors">
                 <div className="text-2xl sm:text-3xl md:text-4xl font-black font-mono text-primary mb-1 sm:mb-2">
@@ -199,7 +308,7 @@ export default function Home() {
       <section className="py-14 md:py-24 container mx-auto px-4 sm:px-6">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-20 items-start">
 
-          {/* Terminal — shows first on mobile, sticky on desktop */}
+          {/* Terminal */}
           <div className="order-1 lg:order-none lg:sticky lg:top-24">
             <div className="relative group">
               <div className="absolute -inset-px rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary/40 via-emerald-500/20 to-blue-500/30 opacity-0 group-hover:opacity-100 transition-all duration-700 blur-sm" />
@@ -211,29 +320,31 @@ export default function Home() {
                     <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-yellow-500/70" />
                     <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-green-500/70" />
                   </div>
-                  {/* Tabs — scrollable on mobile */}
                   <div className="flex items-center gap-1 ml-2 sm:ml-4 overflow-x-auto scrollbar-none">
                     {CODE_EXAMPLES.map((ex, i) => (
-                      <button key={i} onClick={() => setActiveTab(i)} className={"px-2.5 sm:px-3 py-1 rounded-md text-[11px] sm:text-xs font-mono whitespace-nowrap transition-all " + (activeTab === i ? "bg-primary/15 text-primary border border-primary/20" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}>
+                      <button key={i} onClick={() => setActiveTab(i)}
+                        className={"flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-md text-[11px] sm:text-xs font-mono whitespace-nowrap transition-all " +
+                          (activeTab === i ? "bg-primary/15 text-primary border border-primary/20" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}>
+                        <span className={"text-[9px] px-1.5 py-0.5 rounded border font-semibold " + ex.badgeColor}>{ex.badge}</span>
                         {ex.label}
                       </button>
                     ))}
                   </div>
                 </div>
                 {/* Code */}
-                <div className="p-4 sm:p-6 min-h-[140px] sm:min-h-[160px] overflow-x-auto">
+                <div className="p-4 sm:p-6 min-h-[160px] overflow-x-auto bg-zinc-950/60">
                   <pre className="font-mono text-[11px] sm:text-sm leading-6 sm:leading-7 text-muted-foreground">
                     <code dangerouslySetInnerHTML={{ __html: highlight(CODE_EXAMPLES[activeTab].code) }} />
                   </pre>
                 </div>
-                {/* Mock response */}
-                <div className="border-t border-border/40 px-4 sm:px-6 py-3 sm:py-4 bg-muted/10">
+                {/* Response */}
+                <div className="border-t border-border/40 px-4 sm:px-6 py-3 sm:py-4 bg-muted/5">
                   <div className="flex items-center gap-2 mb-1.5">
                     <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-[10px] sm:text-xs font-mono text-green-400">200 OK · ~38ms</span>
+                    <span className="text-[10px] sm:text-xs font-mono text-green-400">200 OK · ~{[38, 88, 143, 214][activeTab]}ms</span>
                   </div>
-                  <pre className="font-mono text-[10px] sm:text-xs text-muted-foreground/70 leading-relaxed overflow-x-auto">
-{`{ "status": true, "creator": "trustbit",\n  "result": "Hello! How can I help?" }`}
+                  <pre className="font-mono text-[10px] sm:text-xs text-muted-foreground/70 leading-relaxed overflow-x-auto whitespace-pre-wrap">
+                    {CODE_EXAMPLES[activeTab].response}
                   </pre>
                 </div>
               </div>
@@ -248,18 +359,21 @@ export default function Home() {
                 Built for builders<br className="hidden sm:block" /> who hate waiting.
               </h2>
               <p className="mt-3 text-muted-foreground text-sm md:text-base leading-relaxed">
-                No credit card forms. No approval delays.
+                No credit card required. No approval delays.
                 Sign up, grab your key, and ship.
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {FEATURES.map((f, i) => (
-                <div key={i} className="group rounded-xl border border-border/40 bg-card/30 p-4 sm:p-5 hover:border-primary/30 hover:bg-card/60 transition-all duration-300">
-                  <div className="mb-2.5 sm:mb-3 flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-primary/10 border border-primary/15 text-primary group-hover:bg-primary/20 transition-colors">
-                    <f.icon size={15} />
+                <div key={i} className="group relative rounded-xl border border-border/40 bg-card/30 p-4 sm:p-5 hover:border-primary/30 hover:bg-card/60 transition-all duration-300 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="relative">
+                    <div className="mb-2.5 sm:mb-3 flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-primary/10 border border-primary/15 text-primary group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-200">
+                      <f.icon size={15} />
+                    </div>
+                    <h3 className="font-bold text-xs sm:text-sm mb-1">{f.title}</h3>
+                    <p className="text-muted-foreground text-[11px] sm:text-xs leading-relaxed">{f.desc}</p>
                   </div>
-                  <h3 className="font-bold text-xs sm:text-sm mb-1">{f.title}</h3>
-                  <p className="text-muted-foreground text-[11px] sm:text-xs leading-relaxed">{f.desc}</p>
                 </div>
               ))}
             </div>
@@ -269,20 +383,22 @@ export default function Home() {
 
       {/* ── CATEGORY GRID ── */}
       <section className="py-14 md:py-24 border-t border-border/30 relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-primary/5 via-background to-background" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-primary/4 via-background to-background" />
         <div className="container mx-auto px-4 sm:px-6 relative z-10">
           <div className="text-center mb-8 md:mb-12">
             <span className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-primary/70">Categories</span>
             <h2 className="mt-2 text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">Everything in one place.</h2>
             <p className="mt-2 sm:mt-3 text-muted-foreground max-w-lg mx-auto text-xs sm:text-sm md:text-base px-2">
-              From AI to anime to media downloading — all behind one URL.
+              From AI to anime streaming to media downloading — all behind one URL.
             </p>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 sm:gap-3 max-w-5xl mx-auto">
             {CATS.map((cat, i) => (
               <Link href="/docs" key={i}>
-                <div className="group rounded-lg sm:rounded-xl border border-border/30 bg-card/20 hover:bg-card hover:border-primary/30 transition-all duration-300 p-2.5 sm:p-4 text-center cursor-pointer hover:-translate-y-0.5">
-                  <div className="mx-auto mb-1.5 sm:mb-2.5 flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-md sm:rounded-lg bg-primary/8 text-primary/70 group-hover:bg-primary/15 group-hover:text-primary transition-all">
+                <div className="group rounded-lg sm:rounded-xl border border-border/30 bg-card/20 hover:bg-card hover:border-border/60 transition-all duration-300 p-2.5 sm:p-4 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-lg">
+                  <div className={
+                    "mx-auto mb-1.5 sm:mb-2.5 flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-md sm:rounded-lg transition-all duration-200 " + cat.color
+                  }>
                     <cat.icon size={13} className="sm:hidden" />
                     <cat.icon size={16} className="hidden sm:block" />
                   </div>
@@ -304,15 +420,21 @@ export default function Home() {
       {/* ── CTA ── */}
       <section className="py-16 md:py-32 relative overflow-hidden border-t border-border/30">
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(0,255,204,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,204,0.025)_1px,transparent_1px)] bg-[size:40px_40px] sm:bg-[size:48px_48px]" />
-        <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[200px] sm:w-[500px] sm:h-[250px] md:w-[600px] md:h-[300px] bg-primary/8 blur-[80px] sm:blur-[100px] rounded-full" />
+        <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[200px] sm:w-[600px] sm:h-[300px] bg-primary/6 blur-[100px] rounded-full" />
+        <div className="pointer-events-none absolute top-1/4 left-1/4 w-[200px] h-[200px] bg-blue-500/4 blur-[80px] rounded-full" />
+        <div className="pointer-events-none absolute bottom-1/4 right-1/4 w-[200px] h-[200px] bg-violet-500/4 blur-[80px] rounded-full" />
         <div className="container mx-auto px-4 sm:px-6 text-center relative z-10">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs font-mono text-primary/70 mb-6">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+            Ready when you are
+          </div>
           <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-4 sm:mb-5 text-balance">
             Start building{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">right now.</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-emerald-300 to-blue-400">right now.</span>
           </h2>
           <p className="text-muted-foreground text-sm sm:text-base md:text-lg mb-8 md:mb-10 max-w-lg mx-auto px-2">
-            Free to sign up. 100 credits included.
-            Read the docs, run the endpoints live, ship something cool.
+            Free to sign up. 100 credits on day one.
+            Read the docs, run endpoints live, ship something cool.
           </p>
           <div className="flex flex-col xs:flex-row items-center justify-center gap-3 px-4 sm:px-0">
             <Link href="/register" className="w-full sm:w-auto">

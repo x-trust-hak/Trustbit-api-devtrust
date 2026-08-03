@@ -80,13 +80,45 @@ router.get("/admin/stats", async (req, res): Promise<void> => {
   }
 
   try {
-    const [pendingPayments, totalUsers] = await Promise.all([
-      Payment.countDocuments({ status: "pending" }),
-      User.countDocuments(),
-    ]);
-    res.json({ ...base, pendingPayments, totalUsers });
+    const now = Date.now();
+    const todayStart  = new Date(now); todayStart.setHours(0, 0, 0, 0);
+    const weekStart   = new Date(now - 7  * 86400000);
+    const monthStart  = new Date(now - 30 * 86400000);
+
+    const [pendingPayments, totalUsers, todaySignups, weekSignups, monthSignups, rawChart] =
+      await Promise.all([
+        Payment.countDocuments({ status: "pending" }),
+        User.countDocuments(),
+        User.countDocuments({ createdAt: { $gte: todayStart } }),
+        User.countDocuments({ createdAt: { $gte: weekStart } }),
+        User.countDocuments({ createdAt: { $gte: monthStart } }),
+        User.aggregate<{ _id: string; count: number }>([
+          { $match: { createdAt: { $gte: monthStart } } },
+          {
+            $group: {
+              _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+              count: { $sum: 1 },
+            },
+          },
+          { $sort: { _id: 1 } },
+        ]),
+      ]);
+
+    // Fill every day of the last 30 days (including days with 0 signups)
+    const signupMap = new Map(rawChart.map((r) => [r._id, r.count]));
+    const signupChart: { date: string; signups: number }[] = [];
+    for (let i = 29; i >= 0; i--) {
+      const d   = new Date(now - i * 86400000);
+      const key = d.toISOString().split("T")[0];
+      const label = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      signupChart.push({ date: label, signups: signupMap.get(key) ?? 0 });
+    }
+
+    const signupStats = { todaySignups, weekSignups, monthSignups, totalUsers, signupChart };
+
+    res.json({ ...base, pendingPayments, totalUsers, signupStats });
   } catch {
-    res.json({ ...base, pendingPayments: 0, totalUsers: 0 });
+    res.json({ ...base, pendingPayments: 0, totalUsers: 0, signupStats: null });
   }
 });
 

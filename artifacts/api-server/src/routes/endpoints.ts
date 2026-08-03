@@ -161,9 +161,41 @@ function buildCategories(raw: RawCategory[]): MergedCategory[] {
   return Array.from(map.values()).filter((c) => c.items.length > 0);
 }
 
+// Desired display order — categories not listed here fall to the end alphabetically
+const PRIORITY_ORDER: string[] = [
+  "AI Suite",
+  "Voice Synth",
+  "Media Fetch",
+  "Anime Stream",
+  "Anime Hub",
+  "Dev Tools",
+  "Profile Lookup",
+  "Image Studio",
+  "Search Engine",
+  "CinemaDB",
+  "AI Imaging",
+  "GameZone",
+  "Discovery",
+  "Audio Vault",
+  "Style Text",
+  "Text FX",
+  "Font Forge",
+  "Link Shrink",
+  "Web Capture",
+  "SMS Inbox",
+  "Live Sports",
+];
+
 function withAnimeCategory(categories: MergedCategory[]): MergedCategory[] {
-  // Prepend Anime Stream so it sits near the top, before other categories
-  return [ANIME_STREAM_CATEGORY, ...categories];
+  const all = [ANIME_STREAM_CATEGORY, ...categories];
+  return all.sort((a, b) => {
+    const ai = PRIORITY_ORDER.indexOf(a.name);
+    const bi = PRIORITY_ORDER.indexOf(b.name);
+    if (ai === -1 && bi === -1) return a.name.localeCompare(b.name);
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
+  });
 }
 
 router.get("/endpoints", async (req, res): Promise<void> => {
