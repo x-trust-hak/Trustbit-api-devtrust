@@ -61,23 +61,23 @@ const ANIME_STREAM_CATEGORY: MergedCategory = {
   items: [
     {
       name: "Search Anime",
-      desc: "Search for anime titles by name. Returns a list of matching series with their page URLs.",
-      path: "/anime/search?q=naruto",
+      desc: "Search for anime titles by name. Returns a list of matching series with their stream URLs.",
+      path: "/media/search?q=naruto",
     },
     {
       name: "Get Seasons",
-      desc: "List all seasons for a given anime series. Pass the anime page URL from the search result.",
-      path: "/anime/seasons?url=https://www.cartoonsarea.cc/Japanese-Dubbed-Videos/N-Subbed-Series/Naruto-Subbed-Videos/",
+      desc: "List all available seasons for an anime. Pass the result URL from Search Anime.",
+      path: "/media/meta?url=https://www.cartoonsarea.cc/Japanese-Dubbed-Videos/N-Subbed-Series/Naruto-Subbed-Videos/",
     },
     {
       name: "Get Episodes",
-      desc: "List all episodes for a season. Pass the season page URL from the seasons result.",
-      path: "/anime/episodes?url=https://www.cartoonsarea.cc/Japanese-Dubbed-Videos/N-Subbed-Series/Naruto-Subbed-Videos/Naruto-Season-01-Subbed-Videos/",
+      desc: "List all episodes in a season. Pass the season URL from Get Seasons.",
+      path: "/media/list?url=https://www.cartoonsarea.cc/Japanese-Dubbed-Videos/N-Subbed-Series/Naruto-Subbed-Videos/Naruto-Season-01-Subbed-Videos/",
     },
     {
-      name: "Get Download Links",
-      desc: "Get all quality MP4 stream/download links for an episode. Returns URLs sorted from lowest to highest quality.",
-      path: "/anime/links?url=https://www.cartoonsarea.cc/Japanese-Dubbed-Videos/N-Subbed-Series/Naruto-Subbed-Videos/Naruto-Season-01-Subbed-Videos/Episode-1/",
+      name: "Get Stream Links",
+      desc: "Get all quality MP4 stream and download links for an episode, sorted lowest to highest quality.",
+      path: "/media/stream?url=https://www.cartoonsarea.cc/Japanese-Dubbed-Videos/N-Subbed-Series/Naruto-Subbed-Videos/Naruto-Season-01-Subbed-Videos/Episode-1/",
     },
   ],
 };

@@ -1,3 +1,14 @@
+/**
+ * Anime Stream routes — mounted paths are intentionally generic/non-descriptive
+ * so the underlying scraper source and structure are not obvious.
+ *
+ * External paths (what clients call):
+ *   GET /api/media/search?q=...       → search anime by name
+ *   GET /api/media/meta?url=...       → list seasons for an anime
+ *   GET /api/media/list?url=...       → list episodes for a season
+ *   GET /api/media/stream?url=...     → get MP4 download/stream links
+ */
+
 import { Router, type IRouter, type Request, type Response } from "express";
 import axios from "axios";
 import * as cheerio from "cheerio";
@@ -305,9 +316,9 @@ export async function getDownloadLinks(url: string): Promise<DownloadLink[]> {
 
 const router: IRouter = Router();
 
-// Simple in-memory cache to avoid hammering cartoonsarea.cc
+// In-memory cache — keyed by request params, 10-min TTL
 const cache = new Map<string, { data: unknown; expires: number }>();
-const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+const CACHE_TTL = 10 * 60 * 1000;
 
 function cached<T>(key: string, fn: () => Promise<T>): Promise<T> {
   const hit = cache.get(key);
@@ -318,11 +329,14 @@ function cached<T>(key: string, fn: () => Promise<T>): Promise<T> {
   });
 }
 
-/**
- * GET /api/anime/search?q=naruto
- * Search for anime by name.
- */
-router.get("/anime/search", async (req: Request, res: Response): Promise<void> => {
+// Evict expired cache entries every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of cache) if (v.expires <= now) cache.delete(k);
+}, 5 * 60 * 1000).unref();
+
+// ─── GET /api/media/search?q=<name> ──────────────────────────────────────────
+router.get("/media/search", async (req: Request, res: Response): Promise<void> => {
   const q = String(req.query["q"] ?? "").trim();
   if (!q) {
     res.status(400).json({ status: false, error: "q parameter is required" });
@@ -332,65 +346,56 @@ router.get("/anime/search", async (req: Request, res: Response): Promise<void> =
     const results = await cached(`search:${q.toLowerCase()}`, () => searchAnime(q));
     res.json({ status: true, query: q, total: results.length, results });
   } catch (err) {
-    req.log.error({ err }, "anime search failed");
-    res.status(502).json({ status: false, error: "Failed to fetch search results" });
+    req.log.error({ err }, "media search failed");
+    res.status(502).json({ status: false, error: "Failed to fetch results" });
   }
 });
 
-/**
- * GET /api/anime/seasons?url=<anime-page-url>
- * List all seasons for an anime.
- */
-router.get("/anime/seasons", async (req: Request, res: Response): Promise<void> => {
+// ─── GET /api/media/meta?url=<anime-page-url> ────────────────────────────────
+router.get("/media/meta", async (req: Request, res: Response): Promise<void> => {
   const url = String(req.query["url"] ?? "").trim();
   if (!url || !url.startsWith("http")) {
-    res.status(400).json({ status: false, error: "url parameter is required (full anime page URL)" });
+    res.status(400).json({ status: false, error: "url parameter is required" });
     return;
   }
   try {
     const seasons = await cached(`seasons:${url}`, () => getSeasons(url));
-    res.json({ status: true, url, total: seasons.length, seasons });
+    res.json({ status: true, total: seasons.length, seasons });
   } catch (err) {
-    req.log.error({ err }, "anime seasons failed");
-    res.status(502).json({ status: false, error: "Failed to fetch seasons" });
+    req.log.error({ err }, "media meta failed");
+    res.status(502).json({ status: false, error: "Failed to fetch metadata" });
   }
 });
 
-/**
- * GET /api/anime/episodes?url=<season-page-url>
- * List all episodes for a season.
- */
-router.get("/anime/episodes", async (req: Request, res: Response): Promise<void> => {
+// ─── GET /api/media/list?url=<season-page-url> ───────────────────────────────
+router.get("/media/list", async (req: Request, res: Response): Promise<void> => {
   const url = String(req.query["url"] ?? "").trim();
   if (!url || !url.startsWith("http")) {
-    res.status(400).json({ status: false, error: "url parameter is required (full season page URL)" });
+    res.status(400).json({ status: false, error: "url parameter is required" });
     return;
   }
   try {
     const episodes = await cached(`episodes:${url}`, () => getEpisodes(url));
-    res.json({ status: true, url, total: episodes.length, episodes });
+    res.json({ status: true, total: episodes.length, episodes });
   } catch (err) {
-    req.log.error({ err }, "anime episodes failed");
-    res.status(502).json({ status: false, error: "Failed to fetch episodes" });
+    req.log.error({ err }, "media list failed");
+    res.status(502).json({ status: false, error: "Failed to fetch list" });
   }
 });
 
-/**
- * GET /api/anime/links?url=<episode-page-url>
- * Get all quality download/stream links for an episode.
- */
-router.get("/anime/links", async (req: Request, res: Response): Promise<void> => {
+// ─── GET /api/media/stream?url=<episode-page-url> ────────────────────────────
+router.get("/media/stream", async (req: Request, res: Response): Promise<void> => {
   const url = String(req.query["url"] ?? "").trim();
   if (!url || !url.startsWith("http")) {
-    res.status(400).json({ status: false, error: "url parameter is required (full episode page URL)" });
+    res.status(400).json({ status: false, error: "url parameter is required" });
     return;
   }
   try {
     const links = await cached(`links:${url}`, () => getDownloadLinks(url));
-    res.json({ status: true, url, total: links.length, links });
+    res.json({ status: true, total: links.length, links });
   } catch (err) {
-    req.log.error({ err }, "anime links failed");
-    res.status(502).json({ status: false, error: "Failed to fetch download links" });
+    req.log.error({ err }, "media stream failed");
+    res.status(502).json({ status: false, error: "Failed to fetch stream" });
   }
 });
 
