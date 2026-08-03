@@ -32,6 +32,7 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   "AI Suite": "Conversational AI, reasoning, code generation, and music intelligence",
   "AI Imaging": "Generate stunning images in any artistic style powered by AI models",
   "Anime Hub": "Anime search, episode streaming, character reactions and rich metadata",
+  "Anime Stream": "Search anime, browse seasons and episodes, and get direct stream/download links",
   "Media Fetch": "Instantly download media from TikTok, YouTube, Instagram and more",
   "GameZone": "Game stats, leaderboards, trivia and live gaming data endpoints",
   "Image Studio": "Create and manipulate images with custom text overlays and effects",
@@ -52,6 +53,34 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
 
 type RawCategory = { name: string; items: Array<Record<string, { desc: string; path: string }>> };
 type MergedCategory = { name: string; count: number; items: { name: string; desc: string; path: string }[] };
+
+// ─── Native Anime Stream endpoints (served directly by this server) ────────────
+const ANIME_STREAM_CATEGORY: MergedCategory = {
+  name: "Anime Stream",
+  count: 4,
+  items: [
+    {
+      name: "Search Anime",
+      desc: "Search for anime titles by name. Returns a list of matching series with their page URLs.",
+      path: "/anime/search?q=naruto",
+    },
+    {
+      name: "Get Seasons",
+      desc: "List all seasons for a given anime series. Pass the anime page URL from the search result.",
+      path: "/anime/seasons?url=https://www.cartoonsarea.cc/Japanese-Dubbed-Videos/N-Subbed-Series/Naruto-Subbed-Videos/",
+    },
+    {
+      name: "Get Episodes",
+      desc: "List all episodes for a season. Pass the season page URL from the seasons result.",
+      path: "/anime/episodes?url=https://www.cartoonsarea.cc/Japanese-Dubbed-Videos/N-Subbed-Series/Naruto-Subbed-Videos/Naruto-Season-01-Subbed-Videos/",
+    },
+    {
+      name: "Get Download Links",
+      desc: "Get all quality MP4 stream/download links for an episode. Returns URLs sorted from lowest to highest quality.",
+      path: "/anime/links?url=https://www.cartoonsarea.cc/Japanese-Dubbed-Videos/N-Subbed-Series/Naruto-Subbed-Videos/Naruto-Season-01-Subbed-Videos/Episode-1/",
+    },
+  ],
+};
 
 let cachedEndpoints: { endpoints?: RawCategory[] } | null = null;
 let cacheTime = 0;
@@ -132,10 +161,15 @@ function buildCategories(raw: RawCategory[]): MergedCategory[] {
   return Array.from(map.values()).filter((c) => c.items.length > 0);
 }
 
+function withAnimeCategory(categories: MergedCategory[]): MergedCategory[] {
+  // Prepend Anime Stream so it sits near the top, before other categories
+  return [ANIME_STREAM_CATEGORY, ...categories];
+}
+
 router.get("/endpoints", async (req, res): Promise<void> => {
   try {
     const data = await fetchUpstream();
-    const categories = buildCategories(data.endpoints ?? []);
+    const categories = withAnimeCategory(buildCategories(data.endpoints ?? []));
     const totalEndpoints = categories.reduce((sum, c) => sum + c.count, 0);
     const parsed = ListEndpointsResponse.safeParse({ categories, totalEndpoints });
     res.json(parsed.success ? parsed.data : { categories, totalEndpoints });
@@ -147,7 +181,7 @@ router.get("/endpoints", async (req, res): Promise<void> => {
 router.get("/categories", async (req, res): Promise<void> => {
   try {
     const data = await fetchUpstream();
-    const merged = buildCategories(data.endpoints ?? []);
+    const merged = withAnimeCategory(buildCategories(data.endpoints ?? []));
     const categories = merged.map((c) => ({
       name: c.name,
       slug: c.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
@@ -164,7 +198,7 @@ router.get("/categories", async (req, res): Promise<void> => {
 router.get("/status", async (req, res): Promise<void> => {
   try {
     const data = await fetchUpstream();
-    const categories = buildCategories(data.endpoints ?? []);
+    const categories = withAnimeCategory(buildCategories(data.endpoints ?? []));
     const totalEndpoints = categories.reduce((sum, c) => sum + c.count, 0);
     const payload = {
       status: "operational",
