@@ -9,6 +9,7 @@ import animeRouter from "./anime";
 import paymentRouter from "./payment";
 import { metrics } from "../lib/metrics";
 import { requireApiKey } from "../middleware/apiAuth";
+import amazonRouter from "./amazon";
 
 const router: IRouter = Router();
 
@@ -31,5 +32,6 @@ router.use(endpointsRouter);
 router.use(visitorsRouter);
 router.use(animeRouter);
 router.use(requireApiKey, proxyRouter);
+router.use('/amazon', amazonRouter);
 
 export default router;
